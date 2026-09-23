@@ -1,0 +1,86 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '@/layouts/Layout.astro';
+import NoteRow from '@/components/NoteRow.astro';
+
+const posts = (await getCollection('blog', ({ data }) => data.published)).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf()
+);
+
+const categories = [...new Set(posts.map((p) => p.data.category))];
+---
+
+<Layout
+  title="Blog"
+  description="観測記録、物理の考察、制作の過程など、Rootが書きためているノート。"
+>
+  <section class="page-head wrap">
+    <p class="eyebrow">Field Notes</p>
+    <h1>Blog</h1>
+    <p class="page-head__lede">
+      観測の記録、物理の考察、制作の過程。まとまった記事というより、気づいたことのノートに近い。
+    </p>
+    {
+      categories.length > 0 && (
+        <p class="page-head__categories">
+          {categories.map((c) => (
+            <span>{c}</span>
+          ))}
+        </p>
+      )
+    }
+  </section>
+
+  <section class="list wrap">
+    {
+      posts.length > 0 ? (
+        posts.map((post) => <NoteRow post={post} />)
+      ) : (
+        <p class="list__empty">まだ記事がありません。近いうちに書きます。</p>
+      )
+    }
+  </section>
+</Layout>
+
+<style>
+  .page-head {
+    padding-top: clamp(6rem, 14vw, 9rem);
+    padding-bottom: clamp(2rem, 5vw, 3rem);
+  }
+
+  .page-head h1 {
+    font-size: clamp(3rem, 12vw, 6.5rem);
+    margin-top: 0.75rem;
+  }
+
+  .page-head__lede {
+    margin-top: 1.25rem;
+    max-width: 52ch;
+    color: var(--color-ink-soft);
+    font-size: var(--fs-1);
+  }
+
+  .page-head__categories {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1rem;
+    margin-top: 1.5rem;
+    font-family: var(--font-mono);
+    font-size: var(--fs-000);
+    color: var(--color-muted);
+  }
+
+  .list {
+    padding-bottom: clamp(3rem, 8vw, 5rem);
+  }
+
+  .list :global(.note:last-child) {
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .list__empty {
+    padding-block: 3rem;
+    border-top: 1px solid var(--color-line);
+    color: var(--color-muted);
+  }
+</style>

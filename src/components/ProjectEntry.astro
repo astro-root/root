@@ -1,0 +1,140 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  project: CollectionEntry<'projects'>;
+  index: number;
+  variant?: 'compact' | 'full';
+}
+
+const { project, index, variant = 'full' } = Astro.props;
+const { title, summary, category, status, year, technology, url, github } =
+  project.data;
+---
+
+<article class:list={['entry', `entry--${variant}`]}>
+  <p class="entry__index">{String(index).padStart(2, '0')}</p>
+
+  <div class="entry__body">
+    <div class="entry__head">
+      <h3 class="entry__title">{title}</h3>
+      <p class="entry__meta">
+        <span>{category}</span>
+        <span aria-hidden="true">/</span>
+        <span>{status}</span>
+        <span aria-hidden="true">/</span>
+        <span>{year}</span>
+      </p>
+    </div>
+
+    <p class="entry__summary">{summary}</p>
+
+    {
+      variant === 'full' && (
+        <>
+          <ul class="entry__tech">
+            {technology.map((t) => (
+              <li>{t}</li>
+            ))}
+          </ul>
+
+          {(url || github) && (
+            <p class="entry__links">
+              {url && (
+                <a href={url} target="_blank" rel="noreferrer">
+                  Visit site
+                </a>
+              )}
+              {github && (
+                <a href={github} target="_blank" rel="noreferrer">
+                  Source
+                </a>
+              )}
+            </p>
+          )}
+        </>
+      )
+    }
+  </div>
+</article>
+
+<style>
+  .entry {
+    display: grid;
+    grid-template-columns: 3.5rem 1fr;
+    gap: clamp(1rem, 3vw, 2rem);
+    padding-block: clamp(1.75rem, 4vw, 2.75rem);
+    border-top: 1px solid var(--color-line);
+  }
+
+  .entry__index {
+    font-family: var(--font-mono);
+    font-size: var(--fs-00);
+    color: var(--color-muted);
+  }
+
+  .entry__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem 1.5rem;
+  }
+
+  .entry__title {
+    font-size: clamp(1.5rem, 3.2vw, 2.1rem);
+  }
+
+  .entry__meta {
+    display: flex;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: var(--fs-000);
+    color: var(--color-muted);
+    white-space: nowrap;
+  }
+
+  .entry__summary {
+    margin-top: 0.75rem;
+    max-width: 56ch;
+    color: var(--color-ink-soft);
+  }
+
+  .entry--compact .entry__summary {
+    max-width: 48ch;
+  }
+
+  .entry__tech {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1.25rem;
+  }
+
+  .entry__tech li {
+    font-family: var(--font-mono);
+    font-size: var(--fs-000);
+    color: var(--color-ink-soft);
+    border: 1px solid var(--color-line);
+    padding: 0.2rem 0.55rem;
+    border-radius: var(--radius);
+  }
+
+  .entry__links {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 1.25rem;
+    font-family: var(--font-mono);
+    font-size: var(--fs-00);
+  }
+
+  .entry__links a {
+    text-decoration: underline;
+    text-decoration-color: var(--color-line-strong);
+  }
+
+  .entry__links a:hover {
+    text-decoration-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+</style>

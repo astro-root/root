@@ -1,0 +1,79 @@
+---
+import { getEntry, render } from 'astro:content';
+import Layout from '@/layouts/Layout.astro';
+
+const about = await getEntry('about', 'index');
+const { Content } = await render(about);
+
+const facts = [
+  { label: 'Based in', value: 'Japan' },
+  { label: 'Status', value: 'Student, building on the side' },
+  { label: 'Currently', value: 'Q-Room, physics notes' }
+];
+---
+
+<Layout
+  title="About"
+  description="Root's Laboratory を運営するRootについて。天文・物理・科学とソフトウェア開発への関心と、このサイトの位置づけ。"
+>
+  <section class="page-head wrap">
+    <p class="eyebrow">About</p>
+    <h1>Root</h1>
+  </section>
+
+  <section class="facts wrap" aria-label="Profile">
+    <dl>
+      {
+        facts.map((f) => (
+          <div class="facts__row">
+            <dt>{f.label}</dt>
+            <dd>{f.value}</dd>
+          </div>
+        ))
+      }
+    </dl>
+  </section>
+
+  <section class="body wrap prose">
+    <Content />
+  </section>
+</Layout>
+
+<style>
+  .page-head {
+    padding-top: clamp(6rem, 14vw, 9rem);
+    padding-bottom: clamp(2rem, 5vw, 3rem);
+  }
+
+  .page-head h1 {
+    font-size: clamp(3rem, 12vw, 6.5rem);
+    margin-top: 0.75rem;
+  }
+
+  .facts {
+    padding-block: clamp(1.5rem, 4vw, 2.5rem);
+    border-top: 1px solid var(--color-line);
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .facts dl {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .facts__row {
+    display: grid;
+    grid-template-columns: 8rem 1fr;
+    gap: 1rem;
+    font-size: var(--fs-00);
+  }
+
+  .facts__row dt {
+    font-family: var(--font-mono);
+    color: var(--color-muted);
+  }
+
+  .body {
+    padding-block: clamp(3rem, 8vw, 5rem);
+  }
+</style>

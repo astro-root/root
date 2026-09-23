@@ -1,0 +1,55 @@
+---
+import Layout from '@/layouts/Layout.astro';
+---
+
+<Layout
+  title="404"
+  description="お探しのページが見つかりませんでした。"
+  noIndex
+>
+  <section class="not-found wrap">
+    <p class="eyebrow">Error</p>
+    <h1>404</h1>
+    <p class="not-found__text">
+      このページは存在しないか、移動しました。観測範囲の外だったようです。
+    </p>
+    <a class="not-found__link" href="/">← ホームへ戻る</a>
+  </section>
+</Layout>
+
+<style>
+  .not-found {
+    min-height: 70svh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-block: clamp(4rem, 12vw, 8rem);
+  }
+
+  .not-found h1 {
+    font-size: clamp(4rem, 16vw, 9rem);
+    margin-top: 0.75rem;
+    color: var(--color-accent);
+  }
+
+  .not-found__text {
+    margin-top: 1.25rem;
+    max-width: 42ch;
+    color: var(--color-ink-soft);
+    font-size: var(--fs-1);
+  }
+
+  .not-found__link {
+    display: inline-block;
+    margin-top: 2rem;
+    font-family: var(--font-mono);
+    font-size: var(--fs-00);
+    text-decoration: underline;
+    text-decoration-color: var(--color-line-strong);
+  }
+
+  .not-found__link:hover {
+    color: var(--color-accent);
+    text-decoration-color: var(--color-accent);
+  }
+</style>

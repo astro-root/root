@@ -1,0 +1,94 @@
+---
+import Layout from '@/layouts/Layout.astro';
+
+const links = [
+  { label: 'Email', value: 'contact@astro-root.com', href: 'mailto:contact@astro-root.com' },
+  { label: 'GitHub', value: 'github.com/', href: 'https://github.com/' },
+  { label: 'X', value: 'x.com/', href: 'https://x.com/' }
+];
+---
+
+<Layout
+  title="Contact"
+  description="Root's Laboratory への連絡先。プロジェクトのご相談やご質問はメールでお願いします。"
+>
+  <section class="page-head wrap">
+    <p class="eyebrow">Contact</p>
+    <h1>Let's talk</h1>
+    <p class="page-head__lede">
+      プロジェクトのご相談、ご質問、その他のご連絡はメールでお願いします。できるだけ早く返信します。
+    </p>
+  </section>
+
+  <section class="links wrap">
+    <ul>
+      {
+        links.map((l) => (
+          <li>
+            <a
+              href={l.href}
+              target={l.href.startsWith('http') ? '_blank' : undefined}
+              rel={l.href.startsWith('http') ? 'noreferrer' : undefined}
+            >
+              <span class="links__label eyebrow">{l.label}</span>
+              <span class="links__value">{l.value}</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+</Layout>
+
+<style>
+  .page-head {
+    padding-top: clamp(6rem, 14vw, 9rem);
+    padding-bottom: clamp(2rem, 5vw, 3rem);
+  }
+
+  .page-head h1 {
+    font-size: clamp(3rem, 12vw, 6.5rem);
+    margin-top: 0.75rem;
+  }
+
+  .page-head__lede {
+    margin-top: 1.25rem;
+    max-width: 48ch;
+    color: var(--color-ink-soft);
+    font-size: var(--fs-1);
+  }
+
+  .links {
+    padding-bottom: clamp(4rem, 10vw, 7rem);
+    border-top: 1px solid var(--color-line);
+  }
+
+  .links ul {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .links li {
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .links a {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem 1.5rem;
+    padding-block: clamp(1.5rem, 4vw, 2.5rem);
+    text-decoration: none;
+  }
+
+  .links__value {
+    font-size: clamp(1.5rem, 5vw, 2.75rem);
+    letter-spacing: -0.01em;
+    transition: color var(--dur-fast) var(--ease-lab);
+  }
+
+  .links a:hover .links__value,
+  .links a:focus-visible .links__value {
+    color: var(--color-accent);
+  }
+</style>

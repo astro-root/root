@@ -1,0 +1,112 @@
+---
+import { getCollection, render } from 'astro:content';
+import Layout from '@/layouts/Layout.astro';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog', ({ data }) => data.published);
+  return posts.map((post) => ({
+    params: { slug: post.data.slugOverride ?? post.slug },
+    props: { post }
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+const { title, date, category, tags, excerpt } = post.data;
+
+const formatted = date.toLocaleDateString('ja-JP', {
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit'
+});
+---
+
+<Layout title={title} description={excerpt}>
+  <article>
+    <header class="post-head wrap">
+      <a class="post-head__back" href="/blog">← Blog</a>
+      <p class="post-head__meta">
+        <time datetime={date.toISOString()}>{formatted}</time>
+        <span aria-hidden="true">/</span>
+        <span>{category}</span>
+      </p>
+      <h1>{title}</h1>
+      {
+        tags.length > 0 && (
+          <ul class="post-head__tags">
+            {tags.map((t) => (
+              <li>#{t}</li>
+            ))}
+          </ul>
+        )
+      }
+    </header>
+
+    <div class="post-body wrap prose">
+      <Content />
+    </div>
+
+    <footer class="post-foot wrap">
+      <a href="/blog">← すべてのノートを見る</a>
+    </footer>
+  </article>
+</Layout>
+
+<style>
+  .post-head {
+    padding-top: clamp(6rem, 14vw, 8rem);
+    padding-bottom: clamp(2rem, 5vw, 3rem);
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .post-head__back {
+    font-family: var(--font-mono);
+    font-size: var(--fs-000);
+    color: var(--color-muted);
+    text-decoration: none;
+  }
+
+  .post-head__back:hover {
+    color: var(--color-accent);
+  }
+
+  .post-head__meta {
+    display: flex;
+    gap: 0.6rem;
+    margin-top: 1.5rem;
+    font-family: var(--font-mono);
+    font-size: var(--fs-000);
+    color: var(--color-accent);
+  }
+
+  .post-head h1 {
+    margin-top: 0.75rem;
+    font-size: clamp(2rem, 6vw, 3.5rem);
+    max-width: 22ch;
+  }
+
+  .post-head__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+    font-family: var(--font-mono);
+    font-size: var(--fs-000);
+    color: var(--color-muted);
+  }
+
+  .post-body {
+    padding-block: clamp(2.5rem, 6vw, 4rem);
+  }
+
+  .post-foot {
+    padding-bottom: clamp(3rem, 8vw, 5rem);
+    font-family: var(--font-mono);
+    font-size: var(--fs-00);
+  }
+
+  .post-foot a {
+    text-decoration: underline;
+    text-decoration-color: var(--color-line-strong);
+  }
+</style>

@@ -1,0 +1,265 @@
+---
+const nav = [
+  { href: '/about', label: 'About' },
+  { href: '/projects', label: 'Projects' },
+  { href: '/blog', label: 'Blog' },
+  { href: '/contact', label: 'Contact' }
+];
+const path = Astro.url.pathname;
+---
+
+<header class="site-nav" id="site-nav">
+  <div class="site-nav__bar wrap">
+    <a href="/" class="site-nav__mark" aria-label="Root's Laboratory — home">
+      ROOT'S<br />LABORATORY
+    </a>
+
+    <nav class="site-nav__links" aria-label="Primary">
+      <ul>
+        {
+          nav.map((item) => (
+            <li>
+              <a
+                href={item.href}
+                aria-current={path.startsWith(item.href) ? 'page' : undefined}
+              >
+                {item.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <button
+      class="site-nav__toggle"
+      id="nav-toggle"
+      aria-expanded="false"
+      aria-controls="nav-overlay"
+    >
+      <span class="site-nav__toggle-label">Menu</span>
+      <span class="site-nav__toggle-icon" aria-hidden="true"></span>
+    </button>
+  </div>
+</header>
+
+<div class="site-nav__overlay" id="nav-overlay" hidden>
+  <ul>
+    {
+      nav.map((item, i) => (
+        <li style={`--i:${i}`}>
+          <span class="site-nav__overlay-index">{String(i + 1).padStart(2, '0')}</span>
+          <a href={item.href}>{item.label}</a>
+        </li>
+      ))
+    }
+  </ul>
+  <p class="site-nav__overlay-contact">
+    <a href="mailto:contact@astro-root.com">contact@astro-root.com</a>
+  </p>
+</div>
+
+<style>
+  .site-nav {
+    position: fixed;
+    inset: 0 0 auto 0;
+    z-index: 100;
+    background: color-mix(in srgb, var(--color-bg) 88%, transparent);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-bottom: 1px solid transparent;
+    transition: border-color var(--dur-fast) var(--ease-lab),
+      background var(--dur-fast) var(--ease-lab);
+  }
+
+  .site-nav[data-scrolled='true'] {
+    border-bottom-color: var(--color-line);
+  }
+
+  .site-nav__bar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding-block: 1.1rem;
+    gap: 1rem;
+  }
+
+  .site-nav__mark {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.03em;
+    line-height: 1.35;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .site-nav__links ul {
+    display: flex;
+    gap: clamp(1.25rem, 2.2vw, 2.25rem);
+  }
+
+  .site-nav__links a {
+    text-decoration: none;
+    font-size: var(--fs-00);
+    color: var(--color-ink-soft);
+    position: relative;
+    padding-bottom: 2px;
+  }
+
+  .site-nav__links a::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 100%;
+    bottom: 0;
+    height: 1px;
+    background: var(--color-accent);
+    transition: right var(--dur-fast) var(--ease-lab);
+  }
+
+  .site-nav__links a:hover::after,
+  .site-nav__links a:focus-visible::after,
+  .site-nav__links a[aria-current='page']::after {
+    right: 0;
+  }
+
+  .site-nav__links a[aria-current='page'] {
+    color: var(--color-ink);
+  }
+
+  .site-nav__toggle {
+    display: none;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .site-nav__toggle-label {
+    font-family: var(--font-mono);
+    font-size: var(--fs-000);
+  }
+
+  .site-nav__toggle-icon {
+    width: 22px;
+    height: 14px;
+    position: relative;
+  }
+
+  .site-nav__toggle-icon::before,
+  .site-nav__toggle-icon::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: currentColor;
+    transition: transform var(--dur-fast) var(--ease-lab), opacity var(--dur-fast);
+  }
+
+  .site-nav__toggle-icon::before {
+    top: 0;
+  }
+
+  .site-nav__toggle-icon::after {
+    bottom: 0;
+  }
+
+  .site-nav__toggle[aria-expanded='true'] .site-nav__toggle-icon::before {
+    transform: translateY(6.5px) rotate(45deg);
+  }
+
+  .site-nav__toggle[aria-expanded='true'] .site-nav__toggle-icon::after {
+    transform: translateY(-6.5px) rotate(-45deg);
+  }
+
+  .site-nav__overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--color-bg);
+    z-index: 99;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: var(--gutter);
+  }
+
+  .site-nav__overlay[hidden] {
+    display: none;
+  }
+
+  .site-nav__overlay ul {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .site-nav__overlay li {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    border-top: 1px solid var(--color-line);
+    padding: 1rem 0;
+  }
+
+  .site-nav__overlay li:last-child {
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .site-nav__overlay-index {
+    font-family: var(--font-mono);
+    font-size: var(--fs-00);
+    color: var(--color-muted);
+  }
+
+  .site-nav__overlay a {
+    text-decoration: none;
+    font-size: clamp(2rem, 9vw, 3.5rem);
+    line-height: 1;
+  }
+
+  .site-nav__overlay-contact {
+    margin-top: 2.5rem;
+    font-family: var(--font-mono);
+    font-size: var(--fs-00);
+  }
+
+  .site-nav__overlay-contact a {
+    text-decoration: underline;
+    text-decoration-color: var(--color-line-strong);
+  }
+
+  @media (max-width: 720px) {
+    .site-nav__links {
+      display: none;
+    }
+    .site-nav__toggle {
+      display: flex;
+    }
+  }
+</style>
+
+<script>
+  const header = document.getElementById('site-nav');
+  const toggle = document.getElementById('nav-toggle');
+  const overlay = document.getElementById('nav-overlay');
+
+  const setScrolled = () => {
+    if (!header) return;
+    header.dataset.scrolled = window.scrollY > 8 ? 'true' : 'false';
+  };
+  setScrolled();
+  window.addEventListener('scroll', setScrolled, { passive: true });
+
+  toggle?.addEventListener('click', () => {
+    const isOpen = toggle.getAttribute('aria-expanded') === 'true';
+    toggle.setAttribute('aria-expanded', String(!isOpen));
+    if (overlay) overlay.hidden = isOpen;
+    document.body.style.overflow = isOpen ? '' : 'hidden';
+  });
+
+  overlay?.querySelectorAll('a').forEach((a) =>
+    a.addEventListener('click', () => {
+      toggle?.setAttribute('aria-expanded', 'false');
+      if (overlay) overlay.hidden = true;
+      document.body.style.overflow = '';
+    })
+  );
+</script>

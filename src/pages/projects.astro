@@ -1,0 +1,57 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '@/layouts/Layout.astro';
+import ProjectEntry from '@/components/ProjectEntry.astro';
+
+const projects = (await getCollection('projects')).sort(
+  (a, b) => a.data.order - b.data.order
+);
+---
+
+<Layout
+  title="Projects"
+  description="Rootが制作しているWebサービス・ソフトウェア・実験的なプロジェクトの一覧。"
+>
+  <section class="page-head wrap">
+    <p class="eyebrow">Catalog</p>
+    <h1>Projects</h1>
+    <p class="page-head__lede">
+      完成しているものも、途中のものも、同じ棚に並べている。制作順ではなく、思いつきや必要に応じて番号を振った記録の一覧。
+    </p>
+  </section>
+
+  <section class="catalog wrap">
+    {
+      projects.map((project, i) => (
+        <ProjectEntry project={project} index={i + 1} variant="full" />
+      ))
+    }
+  </section>
+</Layout>
+
+<style>
+  .page-head {
+    padding-top: clamp(6rem, 14vw, 9rem);
+    padding-bottom: clamp(2rem, 5vw, 3rem);
+  }
+
+  .page-head h1 {
+    font-size: clamp(3rem, 12vw, 6.5rem);
+    margin-top: 0.75rem;
+  }
+
+  .page-head__lede {
+    margin-top: 1.25rem;
+    max-width: 52ch;
+    color: var(--color-ink-soft);
+    font-size: var(--fs-1);
+  }
+
+  .catalog {
+    padding-bottom: clamp(3rem, 8vw, 5rem);
+  }
+
+  .catalog :global(.entry:last-child) {
+    border-bottom: 1px solid var(--color-line);
+  }
+</style>
