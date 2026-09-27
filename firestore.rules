@@ -1,0 +1,46 @@
+rules_version = '2';
+
+// Firebaseコンソール → Firestore Database → Rules タブに、この内容を
+// そのまま貼り付けてください（または Firebase CLI で deploy）。
+//
+// "ADMIN_UID_HERE" は、あなたの Firebase Auth UID に置き換えてください。
+// (Firebase Console → Authentication → Users → 対象ユーザーの "User UID" 列)
+// .env の PUBLIC_ADMIN_UID と必ず同じ値にしてください。
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth != null && request.auth.uid == "ADMIN_UID_HERE";
+    }
+
+    // Projects: 誰でも読める。書き込みは管理者のみ。
+    match /projects/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Blog: 公開済み(published == true)の記事は誰でも読める。
+    // 下書き(published == false)は管理者のみ読める。書き込みは管理者のみ。
+    match /blog/{id} {
+      allow read: if resource.data.published == true || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // About / Settings: 単一ドキュメント。誰でも読める。書き込みは管理者のみ。
+    match /about/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /settings/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // 上記以外はすべて拒否。
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

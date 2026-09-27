@@ -1,0 +1,154 @@
+---
+export const prerender = false;
+import '@/styles/global.css';
+import '@/styles/admin.css';
+---
+
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <title>Log in — Admin — Root's Laboratory</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="login-body">
+    <main class="login">
+      <p class="login__mark eyebrow">ROOT'S LABORATORY / ADMIN</p>
+      <h1>Log in</h1>
+
+      <form id="login-form" novalidate>
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" autocomplete="username" required />
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" required />
+        </div>
+        <p id="login-error" class="login__error" role="alert" hidden></p>
+        <button type="submit" class="btn btn-primary" id="login-submit">Log in</button>
+      </form>
+
+      <p class="login__hint">
+        このAdminは、あなた一人のためのFirebaseアカウントでのみログインできます。<br />
+        設定方法は README.md の「Firebaseのセットアップ」を参照してください。
+      </p>
+    </main>
+
+    <script>
+      import {
+        getAuthClient,
+        signInWithEmailAndPassword,
+        isFirebaseConfigured,
+        onAuthStateChanged,
+        ADMIN_UID
+      } from '@/lib/firebase-client';
+
+      const params = new URLSearchParams(window.location.search);
+      const errorEl = document.getElementById('login-error') as HTMLParagraphElement;
+      const form = document.getElementById('login-form') as HTMLFormElement;
+      const submitBtn = document.getElementById('login-submit') as HTMLButtonElement;
+
+      function showError(msg: string) {
+        errorEl.textContent = msg;
+        errorEl.hidden = false;
+      }
+
+      if (!isFirebaseConfigured) {
+        showError(
+          'Firebaseが設定されていません。.env に PUBLIC_FIREBASE_* を設定してください（README参照）。'
+        );
+        submitBtn.disabled = true;
+      } else if (params.get('error') === 'not-configured') {
+        showError('Firebaseが設定されていないため、Adminにアクセスできません。');
+      }
+
+      // すでにログイン済みならダッシュボードへ
+      if (isFirebaseConfigured) {
+        onAuthStateChanged(getAuthClient(), (user) => {
+          if (user && user.uid === ADMIN_UID) {
+            window.location.href = '/admin';
+          }
+        });
+      }
+
+      form?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!isFirebaseConfigured) return;
+        errorEl.hidden = true;
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Logging in…';
+
+        const email = (document.getElementById('email') as HTMLInputElement).value;
+        const password = (document.getElementById('password') as HTMLInputElement).value;
+
+        try {
+          const cred = await signInWithEmailAndPassword(getAuthClient(), email, password);
+          if (cred.user.uid !== ADMIN_UID) {
+            showError('このアカウントには管理者権限がありません。');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Log in';
+            return;
+          }
+          window.location.href = '/admin';
+        } catch (err) {
+          showError('ログインに失敗しました。メールアドレスとパスワードを確認してください。');
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Log in';
+        }
+      });
+    </script>
+
+    <style>
+      .login-body {
+        background: var(--color-bg);
+        color: var(--color-ink);
+        font-family: var(--font-sans);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .login {
+        width: min(24rem, 90vw);
+      }
+
+      .login__mark {
+        margin-bottom: 0.5rem;
+      }
+
+      .login h1 {
+        font-size: 2rem;
+        margin-bottom: 2rem;
+      }
+
+      .login__error {
+        font-family: var(--font-mono);
+        font-size: var(--fs-000);
+        color: #ff9a9d;
+        margin-bottom: 1rem;
+      }
+
+      .login__hint {
+        margin-top: 2rem;
+        font-size: var(--fs-000);
+        color: var(--color-muted);
+        line-height: 1.6;
+      }
+
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+    </style>
+  </body>
+</html>

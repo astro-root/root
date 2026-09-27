@@ -1,0 +1,130 @@
+---
+export const prerender = false;
+import AdminLayout from '@/layouts/AdminLayout.astro';
+---
+
+<AdminLayout title="Blog" active="blog">
+  <div class="admin-heading">
+    <h1>Blog / Notes</h1>
+    <a class="btn btn-primary" href="/admin/blog/edit">+ 新しいNote</a>
+  </div>
+
+  <p id="loading" class="loading-note">読み込み中…</p>
+  <p id="empty" class="loading-note" hidden>まだ記事がありません。</p>
+
+  <table class="admin-table" id="table" hidden>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Title</th>
+        <th>Category</th>
+        <th>Published</th>
+        <th>Featured</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</AdminLayout>
+
+<script>
+  import {
+    requireAdmin,
+    getDb,
+    collection,
+    getDocs,
+    doc,
+    updateDoc,
+    deleteDoc,
+    query,
+    orderBy
+  } from '@/lib/firebase-client';
+
+  await requireAdmin();
+  const db = getDb();
+
+  type PostDoc = {
+    id: string;
+    title: string;
+    date: string;
+    category: string;
+    published: boolean;
+    featured: boolean;
+  };
+
+  let items: PostDoc[] = [];
+
+  function escapeHtml(str: string) {
+    return (str ?? '').replace(
+      /[&<>"']/g,
+      (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!
+    );
+  }
+
+  async function load() {
+    const snap = await getDocs(query(collection(db, 'blog'), orderBy('date', 'desc')));
+    items = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }));
+    render();
+  }
+
+  function render() {
+    const tbody = document.getElementById('tbody')!;
+    document.getElementById('loading')!.setAttribute('hidden', '');
+
+    if (items.length === 0) {
+      document.getElementById('empty')!.removeAttribute('hidden');
+      document.getElementById('table')!.setAttribute('hidden', '');
+      return;
+    }
+    document.getElementById('empty')!.setAttribute('hidden', '');
+    document.getElementById('table')!.removeAttribute('hidden');
+
+    tbody.innerHTML = items
+      .map(
+        (p) => `
+      <tr data-id="${p.id}">
+        <td>${escapeHtml((p.date || '').slice(0, 10))}</td>
+        <td>${escapeHtml(p.title)}</td>
+        <td>${escapeHtml(p.category)}</td>
+        <td><button class="pill ${p.published ? 'pill-on' : ''}" data-action="toggle-published">${p.published ? 'Published' : 'Draft'}</button></td>
+        <td><button class="pill ${p.featured ? 'pill-on' : ''}" data-action="toggle-featured">${p.featured ? 'Featured' : 'Off'}</button></td>
+        <td class="row-actions">
+          <a class="btn" href="/admin/blog/edit?id=${p.id}">Edit</a>
+          <button class="btn btn-danger" data-action="delete">Delete</button>
+        </td>
+      </tr>`
+      )
+      .join('');
+  }
+
+  document.getElementById('tbody')!.addEventListener('click', async (e) => {
+    const btn = (e.target as HTMLElement).closest('button');
+    if (!btn) return;
+    const row = btn.closest('tr')!;
+    const id = row.dataset.id!;
+    const index = items.findIndex((p) => p.id === id);
+    const action = btn.dataset.action;
+
+    if (action === 'delete') {
+      if (!confirm(`"${items[index].title}" を削除しますか？この操作は取り消せません。`)) return;
+      await deleteDoc(doc(db, 'blog', id));
+      await load();
+    } else if (action === 'toggle-published') {
+      await updateDoc(doc(db, 'blog', id), { published: !items[index].published });
+      await load();
+    } else if (action === 'toggle-featured') {
+      await updateDoc(doc(db, 'blog', id), { featured: !items[index].featured });
+      await load();
+    }
+  });
+
+  load();
+</script>
+
+<style>
+  .row-actions {
+    display: flex;
+    gap: 0.5rem;
+    white-space: nowrap;
+  }
+</style>

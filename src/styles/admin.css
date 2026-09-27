@@ -1,0 +1,184 @@
+/* ---- Shared admin UI primitives, used across all /admin pages ---- */
+  .admin-heading {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+  }
+
+  .admin-heading h1 {
+    font-size: clamp(1.6rem, 3vw, 2.2rem);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: var(--font-mono);
+    font-size: var(--fs-00);
+    padding: 0.55rem 1rem;
+    border-radius: 3px;
+    border: 1px solid var(--color-line-strong);
+    color: var(--color-ink);
+    text-decoration: none;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .btn:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+
+  .btn-primary {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: #0a0b0d;
+    font-weight: 500;
+  }
+
+  .btn-primary:hover {
+    color: #0a0b0d;
+    opacity: 0.9;
+  }
+
+  .btn-danger:hover {
+    border-color: #e5484d;
+    color: #e5484d;
+  }
+
+  .admin-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .admin-table th {
+    text-align: left;
+    font-family: var(--font-mono);
+    font-size: var(--fs-000);
+    color: var(--color-muted);
+    font-weight: 400;
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid var(--color-line-strong);
+  }
+
+  .admin-table td {
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--color-line);
+    font-size: var(--fs-00);
+    vertical-align: middle;
+  }
+
+  .admin-table tr:hover td {
+    background: var(--color-bg-panel);
+  }
+
+  .pill {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: var(--fs-000);
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    border: 1px solid var(--color-line-strong);
+    color: var(--color-ink-soft);
+  }
+
+  .pill-on {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .field label {
+    font-family: var(--font-mono);
+    font-size: var(--fs-000);
+    color: var(--color-muted);
+  }
+
+  .field input[type='text'],
+  .field input[type='email'],
+  .field input[type='url'],
+  .field input[type='number'],
+  .field input[type='date'],
+  .field input[type='password'],
+  .field select,
+  .field textarea {
+    background: var(--color-bg-panel);
+    border: 1px solid var(--color-line-strong);
+    color: var(--color-ink);
+    padding: 0.65rem 0.75rem;
+    border-radius: 3px;
+    font-family: var(--font-sans);
+    font-size: var(--fs-0);
+  }
+
+  .field textarea {
+    font-family: var(--font-mono);
+    font-size: var(--fs-00);
+    line-height: 1.6;
+    resize: vertical;
+  }
+
+  .field input:focus,
+  .field select:focus,
+  .field textarea:focus {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 1px;
+  }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem 1.5rem;
+  }
+
+  .checkbox-field {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .checkbox-field label {
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: var(--fs-00);
+  }
+
+  .panel {
+    background: var(--color-bg-panel);
+    border: 1px solid var(--color-line);
+    border-radius: 4px;
+    padding: clamp(1.25rem, 3vw, 2rem);
+  }
+
+  .status-msg {
+    font-family: var(--font-mono);
+    font-size: var(--fs-00);
+    padding: 0.75rem 1rem;
+    border-radius: 3px;
+    margin-bottom: 1.5rem;
+  }
+
+  .status-msg.ok {
+    background: var(--color-accent-soft);
+    color: var(--color-accent-ink);
+  }
+
+  .status-msg.err {
+    background: #33191a;
+    color: #ff9a9d;
+  }
+
+  .loading-note {
+    font-family: var(--font-mono);
+    font-size: var(--fs-00);
+    color: var(--color-muted);
+  }

@@ -1,14 +1,16 @@
 ---
-import { getEntry, render } from 'astro:content';
-import Layout from '@/layouts/Layout.astro';
+export const prerender = false;
 
-const about = await getEntry('about', 'index');
-const { Content } = await render(about);
+import Layout from '@/layouts/Layout.astro';
+import CosmicField from '@/components/CosmicField.astro';
+import { getAbout } from '@/lib/content';
+
+const about = await getAbout();
 
 const facts = [
-  { label: 'Based in', value: 'Japan' },
-  { label: 'Status', value: 'Student, building on the side' },
-  { label: 'Currently', value: 'Q-Room, physics notes' }
+  { label: 'Based in', value: about.based },
+  { label: 'Status', value: about.status },
+  { label: 'Currently', value: about.currently }
 ];
 ---
 
@@ -16,9 +18,12 @@ const facts = [
   title="About"
   description="Root's Laboratory を運営するRootについて。天文・物理・科学とソフトウェア開発への関心と、このサイトの位置づけ。"
 >
-  <section class="page-head wrap">
-    <p class="eyebrow">About</p>
-    <h1>Root</h1>
+  <section class="page-head">
+    <CosmicField variant="quiet" />
+    <div class="wrap page-head__inner">
+      <p class="eyebrow">About</p>
+      <h1>Root</h1>
+    </div>
   </section>
 
   <section class="facts wrap" aria-label="Profile">
@@ -34,24 +39,29 @@ const facts = [
     </dl>
   </section>
 
-  <section class="body wrap prose">
-    <Content />
-  </section>
+  <section class="body wrap prose" set:html={about.bodyHtml} />
 </Layout>
 
 <style>
   .page-head {
-    padding-top: clamp(6rem, 14vw, 9rem);
-    padding-bottom: clamp(2rem, 5vw, 3rem);
+    position: relative;
+    overflow: hidden;
+    padding-top: clamp(7rem, 16vw, 11rem);
+    padding-bottom: clamp(3rem, 7vw, 5rem);
+  }
+
+  .page-head__inner {
+    position: relative;
+    z-index: 1;
   }
 
   .page-head h1 {
-    font-size: clamp(3rem, 12vw, 6.5rem);
-    margin-top: 0.75rem;
+    font-size: clamp(3.2rem, 13vw, 7rem);
+    margin-top: 1rem;
   }
 
   .facts {
-    padding-block: clamp(1.5rem, 4vw, 2.5rem);
+    padding-block: clamp(2rem, 5vw, 3rem);
     border-top: 1px solid var(--color-line);
     border-bottom: 1px solid var(--color-line);
   }
@@ -74,6 +84,6 @@ const facts = [
   }
 
   .body {
-    padding-block: clamp(3rem, 8vw, 5rem);
+    padding-block: var(--section-space);
   }
 </style>

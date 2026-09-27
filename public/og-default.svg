@@ -1,8 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
-  <rect width="1200" height="630" fill="#faf9f6"/>
-  <rect x="0" y="0" width="1200" height="630" fill="none" stroke="#dedcd3" stroke-width="2"/>
-  <circle cx="1080" cy="90" r="10" fill="#2c4bd6"/>
-  <text x="80" y="330" font-family="IBM Plex Sans, Arial, sans-serif" font-size="118" font-weight="600" letter-spacing="-2" fill="#14140f">ROOT'S</text>
-  <text x="80" y="430" font-family="IBM Plex Sans, Arial, sans-serif" font-size="118" font-weight="600" letter-spacing="-2" fill="#14140f">LABORATORY</text>
-  <text x="80" y="500" font-family="IBM Plex Mono, monospace" font-size="26" letter-spacing="1" fill="#2c4bd6">SCIENCE. SOFTWARE. IDEAS.</text>
+  <rect width="1200" height="630" fill="#0a0b0d"/>
+  <rect x="0" y="0" width="1200" height="630" fill="none" stroke="#21242a" stroke-width="2"/>
+  <g opacity="0.5" stroke="#5b7fff" stroke-width="1" fill="none">
+    <ellipse cx="1000" cy="120" rx="260" ry="260"/>
+    <ellipse cx="1000" cy="120" rx="160" ry="160"/>
+  </g>
+  <circle cx="1080" cy="90" r="10" fill="#5b7fff"/>
+  <text x="80" y="330" font-family="IBM Plex Sans, Arial, sans-serif" font-size="118" font-weight="600" letter-spacing="-2" fill="#f1efe8">ROOT'S</text>
+  <text x="80" y="430" font-family="IBM Plex Sans, Arial, sans-serif" font-size="118" font-weight="600" letter-spacing="-2" fill="#f1efe8">LABORATORY</text>
+  <text x="80" y="500" font-family="IBM Plex Mono, monospace" font-size="26" letter-spacing="1" fill="#5b7fff">SCIENCE. SOFTWARE. IDEAS.</text>
 </svg>

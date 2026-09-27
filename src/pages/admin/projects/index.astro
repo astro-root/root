@@ -1,0 +1,167 @@
+---
+export const prerender = false;
+import AdminLayout from '@/layouts/AdminLayout.astro';
+---
+
+<AdminLayout title="Projects" active="projects">
+  <div class="admin-heading">
+    <h1>Projects</h1>
+    <a class="btn btn-primary" href="/admin/projects/edit">+ 新しいProject</a>
+  </div>
+
+  <p id="loading" class="loading-note">読み込み中…</p>
+  <p id="empty" class="loading-note" hidden>まだProjectがありません。</p>
+
+  <table class="admin-table" id="table" hidden>
+    <thead>
+      <tr>
+        <th>Order</th>
+        <th>Title</th>
+        <th>Category / Status</th>
+        <th>Featured</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</AdminLayout>
+
+<script>
+  import {
+    requireAdmin,
+    getDb,
+    collection,
+    getDocs,
+    doc,
+    updateDoc,
+    deleteDoc,
+    query,
+    orderBy
+  } from '@/lib/firebase-client';
+
+  await requireAdmin();
+  const db = getDb();
+
+  type ProjectDoc = {
+    id: string;
+    title: string;
+    order: number;
+    category: string;
+    status: string;
+    featured: boolean;
+  };
+
+  let items: ProjectDoc[] = [];
+
+  async function load() {
+    const snap = await getDocs(query(collection(db, 'projects'), orderBy('order', 'asc')));
+    items = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }));
+    render();
+  }
+
+  function render() {
+    const tbody = document.getElementById('tbody')!;
+    const loading = document.getElementById('loading')!;
+    const empty = document.getElementById('empty')!;
+    const table = document.getElementById('table')!;
+
+    loading.setAttribute('hidden', '');
+
+    if (items.length === 0) {
+      empty.removeAttribute('hidden');
+      table.setAttribute('hidden', '');
+      return;
+    }
+    empty.setAttribute('hidden', '');
+    table.removeAttribute('hidden');
+
+    tbody.innerHTML = items
+      .map(
+        (p, i) => `
+      <tr data-id="${p.id}">
+        <td>
+          <button class="icon-btn" data-action="up" ${i === 0 ? 'disabled' : ''} aria-label="上へ">↑</button>
+          <button class="icon-btn" data-action="down" ${i === items.length - 1 ? 'disabled' : ''} aria-label="下へ">↓</button>
+        </td>
+        <td>${escapeHtml(p.title)}</td>
+        <td>${escapeHtml(p.category)} / ${escapeHtml(p.status)}</td>
+        <td>
+          <button class="pill ${p.featured ? 'pill-on' : ''}" data-action="toggle-featured">
+            ${p.featured ? 'Featured' : 'Off'}
+          </button>
+        </td>
+        <td class="row-actions">
+          <a class="btn" href="/admin/projects/edit?id=${p.id}">Edit</a>
+          <button class="btn btn-danger" data-action="delete">Delete</button>
+        </td>
+      </tr>`
+      )
+      .join('');
+  }
+
+  function escapeHtml(str: string) {
+    return (str ?? '').replace(
+      /[&<>"']/g,
+      (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!
+    );
+  }
+
+  document.getElementById('tbody')!.addEventListener('click', async (e) => {
+    const btn = (e.target as HTMLElement).closest('button');
+    if (!btn) return;
+    const row = btn.closest('tr')!;
+    const id = row.dataset.id!;
+    const index = items.findIndex((p) => p.id === id);
+    const action = btn.dataset.action;
+
+    if (action === 'delete') {
+      if (!confirm(`"${items[index].title}" を削除しますか？この操作は取り消せません。`)) return;
+      await deleteDoc(doc(db, 'projects', id));
+      await load();
+    } else if (action === 'toggle-featured') {
+      const next = !items[index].featured;
+      await updateDoc(doc(db, 'projects', id), { featured: next });
+      await load();
+    } else if (action === 'up' || action === 'down') {
+      const swapWith = action === 'up' ? index - 1 : index + 1;
+      if (swapWith < 0 || swapWith >= items.length) return;
+      const a = items[index];
+      const b = items[swapWith];
+      await Promise.all([
+        updateDoc(doc(db, 'projects', a.id), { order: b.order }),
+        updateDoc(doc(db, 'projects', b.id), { order: a.order })
+      ]);
+      await load();
+    }
+  });
+
+  load();
+</script>
+
+<style>
+  .icon-btn {
+    font-family: var(--font-mono);
+    color: var(--color-ink-soft);
+    padding: 0.15rem 0.4rem;
+    border: 1px solid var(--color-line-strong);
+    border-radius: 3px;
+    cursor: pointer;
+    background: transparent;
+  }
+
+  .icon-btn:disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
+
+  .icon-btn:not(:disabled):hover {
+    color: var(--color-accent);
+    border-color: var(--color-accent);
+  }
+
+  .row-actions {
+    display: flex;
+    gap: 0.5rem;
+    white-space: nowrap;
+  }
+</style>

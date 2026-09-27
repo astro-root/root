@@ -1,0 +1,198 @@
+---
+export const prerender = false;
+import AdminLayout from '@/layouts/AdminLayout.astro';
+
+const CATEGORIES = ['Web Service', 'Software', 'Tool', 'Experiment', 'Research'];
+const STATUSES = ['Active', 'In Development', 'Archived', 'Concept'];
+---
+
+<AdminLayout title="Project editor" active="projects">
+  <div class="admin-heading">
+    <h1 id="form-title">Project</h1>
+    <a class="btn" href="/admin/projects">← 一覧へ</a>
+  </div>
+
+  <p id="loading" class="loading-note">読み込み中…</p>
+  <div id="status-msg-holder"></div>
+
+  <form id="project-form" class="panel" hidden novalidate>
+    <div class="field">
+      <label for="title">Title *</label>
+      <input id="title" required type="text" />
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="order">表示順 (order) *</label>
+        <input id="order" required type="number" step="1" />
+      </div>
+      <div class="field">
+        <label for="year">Year *</label>
+        <input id="year" required type="text" placeholder="2024–" />
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="category">Category *</label>
+        <select id="category" required>
+          {CATEGORIES.map((c) => <option value={c}>{c}</option>)}
+        </select>
+      </div>
+      <div class="field">
+        <label for="status">Status *</label>
+        <select id="status" required>
+          {STATUSES.map((s) => <option value={s}>{s}</option>)}
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="summary">Summary *</label>
+      <textarea id="summary" required rows="3"></textarea>
+    </div>
+
+    <div class="field">
+      <label for="technology">Technology（カンマ区切り）</label>
+      <input id="technology" type="text" placeholder="TypeScript, React, Firebase" />
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="url">URL</label>
+        <input id="url" type="url" placeholder="https://" />
+      </div>
+      <div class="field">
+        <label for="github">GitHub URL</label>
+        <input id="github" type="url" placeholder="https://github.com/..." />
+      </div>
+    </div>
+
+    <div class="field checkbox-field">
+      <input id="featured" type="checkbox" />
+      <label for="featured">Featured（Homeに表示する）</label>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" id="submit-btn">保存する</button>
+      <button type="button" class="btn btn-danger" id="delete-btn" hidden>このProjectを削除</button>
+    </div>
+  </form>
+</AdminLayout>
+
+<script>
+  import {
+    requireAdmin,
+    getDb,
+    doc,
+    getDoc,
+    getDocs,
+    collection,
+    addDoc,
+    updateDoc,
+    deleteDoc
+  } from '@/lib/firebase-client';
+
+  await requireAdmin();
+  const db = getDb();
+
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+
+  const form = document.getElementById('project-form') as HTMLFormElement;
+  const loading = document.getElementById('loading')!;
+  const deleteBtn = document.getElementById('delete-btn') as HTMLButtonElement;
+
+  function field(id: string) {
+    return document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+  }
+
+  function showMsg(msg: string, ok = true) {
+    const holder = document.getElementById('status-msg-holder')!;
+    holder.innerHTML = `<p class="status-msg ${ok ? 'ok' : 'err'}">${msg}</p>`;
+  }
+
+  if (id) {
+    document.getElementById('form-title')!.textContent = 'Edit Project';
+    const snap = await getDoc(doc(db, 'projects', id));
+    if (snap.exists()) {
+      const d = snap.data() as any;
+      (field('title') as HTMLInputElement).value = d.title ?? '';
+      (field('order') as HTMLInputElement).value = String(d.order ?? 0);
+      (field('year') as HTMLInputElement).value = d.year ?? '';
+      (field('category') as HTMLSelectElement).value = d.category ?? 'Web Service';
+      (field('status') as HTMLSelectElement).value = d.status ?? 'Active';
+      (field('summary') as HTMLTextAreaElement).value = d.summary ?? '';
+      (field('technology') as HTMLInputElement).value = (d.technology ?? []).join(', ');
+      (field('url') as HTMLInputElement).value = d.url ?? '';
+      (field('github') as HTMLInputElement).value = d.github ?? '';
+      (field('featured') as HTMLInputElement).checked = Boolean(d.featured);
+      deleteBtn.hidden = false;
+    } else {
+      showMsg('指定されたProjectが見つかりませんでした。', false);
+    }
+  } else {
+    document.getElementById('form-title')!.textContent = 'New Project';
+    // 新規作成時は、既存の最大orderの次の番号をデフォルトにする
+    const snap = await getDocs(collection(db, 'projects'));
+    const maxOrder = snap.docs.reduce((max, d) => Math.max(max, (d.data() as any).order ?? 0), 0);
+    (field('order') as HTMLInputElement).value = String(maxOrder + 1);
+  }
+
+  loading.setAttribute('hidden', '');
+  form.hidden = false;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement;
+    submitBtn.disabled = true;
+    submitBtn.textContent = '保存中…';
+
+    const payload = {
+      title: (field('title') as HTMLInputElement).value.trim(),
+      order: Number((field('order') as HTMLInputElement).value),
+      year: (field('year') as HTMLInputElement).value.trim(),
+      category: (field('category') as HTMLSelectElement).value,
+      status: (field('status') as HTMLSelectElement).value,
+      summary: (field('summary') as HTMLTextAreaElement).value.trim(),
+      technology: (field('technology') as HTMLInputElement).value
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean),
+      url: (field('url') as HTMLInputElement).value.trim(),
+      github: (field('github') as HTMLInputElement).value.trim(),
+      featured: (field('featured') as HTMLInputElement).checked
+    };
+
+    try {
+      if (id) {
+        await updateDoc(doc(db, 'projects', id), payload);
+      } else {
+        await addDoc(collection(db, 'projects'), payload);
+      }
+      window.location.href = '/admin/projects';
+    } catch (err: any) {
+      showMsg(`保存に失敗しました: ${err.message ?? err}`, false);
+      submitBtn.disabled = false;
+      submitBtn.textContent = '保存する';
+    }
+  });
+
+  deleteBtn.addEventListener('click', async () => {
+    if (!id) return;
+    if (!confirm('このProjectを削除しますか？この操作は取り消せません。')) return;
+    await deleteDoc(doc(db, 'projects', id));
+    window.location.href = '/admin/projects';
+  });
+</script>
+
+<style>
+  .form-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-line);
+  }
+</style>

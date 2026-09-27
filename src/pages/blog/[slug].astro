@@ -1,20 +1,19 @@
 ---
-import { getCollection, render } from 'astro:content';
-import Layout from '@/layouts/Layout.astro';
+export const prerender = false;
 
-export async function getStaticPaths() {
-  const posts = await getCollection('blog', ({ data }) => data.published);
-  return posts.map((post) => ({
-    params: { slug: post.data.slugOverride ?? post.slug },
-    props: { post }
-  }));
+import Layout from '@/layouts/Layout.astro';
+import { getPostBySlug } from '@/lib/content';
+
+const { slug } = Astro.params;
+const post = slug ? await getPostBySlug(slug) : null;
+
+if (!post) {
+  return Astro.redirect('/404');
 }
 
-const { post } = Astro.props;
-const { Content } = await render(post);
-const { title, date, category, tags, excerpt } = post.data;
+const { title, date, category, tags, excerpt, contentHtml } = post;
 
-const formatted = date.toLocaleDateString('ja-JP', {
+const formatted = new Date(date).toLocaleDateString('ja-JP', {
   year: 'numeric',
   month: '2-digit',
   day: '2-digit'
@@ -26,7 +25,7 @@ const formatted = date.toLocaleDateString('ja-JP', {
     <header class="post-head wrap">
       <a class="post-head__back" href="/blog">← Blog</a>
       <p class="post-head__meta">
-        <time datetime={date.toISOString()}>{formatted}</time>
+        <time datetime={new Date(date).toISOString()}>{formatted}</time>
         <span aria-hidden="true">/</span>
         <span>{category}</span>
       </p>
@@ -42,9 +41,7 @@ const formatted = date.toLocaleDateString('ja-JP', {
       }
     </header>
 
-    <div class="post-body wrap prose">
-      <Content />
-    </div>
+    <div class="post-body wrap prose" set:html={contentHtml} />
 
     <footer class="post-foot wrap">
       <a href="/blog">← すべてのノートを見る</a>
@@ -54,8 +51,8 @@ const formatted = date.toLocaleDateString('ja-JP', {
 
 <style>
   .post-head {
-    padding-top: clamp(6rem, 14vw, 8rem);
-    padding-bottom: clamp(2rem, 5vw, 3rem);
+    padding-top: clamp(7rem, 16vw, 10rem);
+    padding-bottom: clamp(3rem, 6vw, 4rem);
     border-bottom: 1px solid var(--color-line);
   }
 
@@ -96,11 +93,11 @@ const formatted = date.toLocaleDateString('ja-JP', {
   }
 
   .post-body {
-    padding-block: clamp(2.5rem, 6vw, 4rem);
+    padding-block: clamp(3rem, 7vw, 5.5rem);
   }
 
   .post-foot {
-    padding-bottom: clamp(3rem, 8vw, 5rem);
+    padding-bottom: var(--section-space);
     font-family: var(--font-mono);
     font-size: var(--fs-00);
   }

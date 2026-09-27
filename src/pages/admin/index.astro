@@ -1,0 +1,96 @@
+---
+export const prerender = false;
+import AdminLayout from '@/layouts/AdminLayout.astro';
+---
+
+<AdminLayout title="Dashboard" active="dashboard">
+  <div class="admin-heading">
+    <h1>Dashboard</h1>
+  </div>
+
+  <p id="loading" class="loading-note">読み込み中…</p>
+
+  <div id="stats" class="stats-grid" hidden>
+    <a href="/admin/projects" class="panel stat-card">
+      <p class="eyebrow">Projects</p>
+      <p class="stat-card__num" id="stat-projects">–</p>
+      <p class="stat-card__sub" id="stat-projects-featured"></p>
+    </a>
+    <a href="/admin/blog" class="panel stat-card">
+      <p class="eyebrow">Blog</p>
+      <p class="stat-card__num" id="stat-posts">–</p>
+      <p class="stat-card__sub" id="stat-posts-published"></p>
+    </a>
+  </div>
+
+  <div class="quick-links">
+    <a class="btn btn-primary" href="/admin/projects/edit">+ 新しいProject</a>
+    <a class="btn btn-primary" href="/admin/blog/edit">+ 新しいNote</a>
+    <a class="btn" href="/admin/about">Aboutを編集</a>
+    <a class="btn" href="/admin/settings">Site Settingsを編集</a>
+  </div>
+</AdminLayout>
+
+<script>
+  import { requireAdmin, getDb, collection, getDocs } from '@/lib/firebase-client';
+
+  await requireAdmin();
+  const db = getDb();
+
+  const [projectsSnap, postsSnap] = await Promise.all([
+    getDocs(collection(db, 'projects')),
+    getDocs(collection(db, 'blog'))
+  ]);
+
+  const projects = projectsSnap.docs.map((d) => d.data());
+  const posts = postsSnap.docs.map((d) => d.data());
+
+  document.getElementById('stat-projects')!.textContent = String(projects.length);
+  document.getElementById('stat-projects-featured')!.textContent = `Featured: ${
+    projects.filter((p: any) => p.featured).length
+  }`;
+  document.getElementById('stat-posts')!.textContent = String(posts.length);
+  document.getElementById('stat-posts-published')!.textContent = `Published: ${
+    posts.filter((p: any) => p.published).length
+  } / Draft: ${posts.filter((p: any) => !p.published).length}`;
+
+  document.getElementById('loading')!.setAttribute('hidden', '');
+  document.getElementById('stats')!.removeAttribute('hidden');
+</script>
+
+<style>
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .stat-card {
+    text-decoration: none;
+    color: var(--color-ink);
+    display: block;
+  }
+
+  .stat-card:hover {
+    border-color: var(--color-accent);
+  }
+
+  .stat-card__num {
+    font-size: 2.5rem;
+    margin-top: 0.5rem;
+  }
+
+  .stat-card__sub {
+    margin-top: 0.4rem;
+    font-family: var(--font-mono);
+    font-size: var(--fs-000);
+    color: var(--color-muted);
+  }
+
+  .quick-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+</style>

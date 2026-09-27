@@ -1,14 +1,19 @@
+---
+import { getSettings } from '@/lib/content';
+const settings = await getSettings();
+---
+
 <footer class="site-footer">
   <div class="wrap site-footer__inner">
     <p class="site-footer__mark">ROOT'S LABORATORY</p>
 
     <ul class="site-footer__links">
-      <li><a href="https://github.com/" target="_blank" rel="noreferrer">GitHub</a></li>
-      <li><a href="https://x.com/" target="_blank" rel="noreferrer">X</a></li>
+      <li><a href={settings.githubUrl} target="_blank" rel="noreferrer">GitHub</a></li>
+      <li><a href={settings.xUrl} target="_blank" rel="noreferrer">X</a></li>
       <li><a href="/contact">Contact</a></li>
     </ul>
 
-    <p class="site-footer__copy">© {new Date().getFullYear()} Root</p>
+    <p class="site-footer__copy">{settings.footerNote} {new Date().getFullYear()}</p>
   </div>
 </footer>
 

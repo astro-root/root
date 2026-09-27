@@ -1,10 +1,20 @@
 ---
+export const prerender = false;
+
 import Layout from '@/layouts/Layout.astro';
+import CosmicField from '@/components/CosmicField.astro';
+import { getSettings } from '@/lib/content';
+
+const settings = await getSettings();
 
 const links = [
-  { label: 'Email', value: 'contact@astro-root.com', href: 'mailto:contact@astro-root.com' },
-  { label: 'GitHub', value: 'github.com/', href: 'https://github.com/' },
-  { label: 'X', value: 'x.com/', href: 'https://x.com/' }
+  {
+    label: 'Email',
+    value: settings.contactEmail,
+    href: `mailto:${settings.contactEmail}`
+  },
+  { label: 'GitHub', value: settings.githubUrl.replace(/^https?:\/\//, ''), href: settings.githubUrl },
+  { label: 'X', value: settings.xUrl.replace(/^https?:\/\//, ''), href: settings.xUrl }
 ];
 ---
 
@@ -12,12 +22,15 @@ const links = [
   title="Contact"
   description="Root's Laboratory への連絡先。プロジェクトのご相談やご質問はメールでお願いします。"
 >
-  <section class="page-head wrap">
-    <p class="eyebrow">Contact</p>
-    <h1>Let's talk</h1>
-    <p class="page-head__lede">
-      プロジェクトのご相談、ご質問、その他のご連絡はメールでお願いします。できるだけ早く返信します。
-    </p>
+  <section class="page-head">
+    <CosmicField variant="quiet" />
+    <div class="wrap page-head__inner">
+      <p class="eyebrow">Contact</p>
+      <h1>Let's talk</h1>
+      <p class="page-head__lede">
+        プロジェクトのご相談、ご質問、その他のご連絡はメールでお願いします。できるだけ早く返信します。
+      </p>
+    </div>
   </section>
 
   <section class="links wrap">
@@ -42,24 +55,32 @@ const links = [
 
 <style>
   .page-head {
-    padding-top: clamp(6rem, 14vw, 9rem);
-    padding-bottom: clamp(2rem, 5vw, 3rem);
+    position: relative;
+    overflow: hidden;
+    padding-top: clamp(7rem, 16vw, 11rem);
+    padding-bottom: clamp(3rem, 7vw, 5rem);
+  }
+
+  .page-head__inner {
+    position: relative;
+    z-index: 1;
   }
 
   .page-head h1 {
-    font-size: clamp(3rem, 12vw, 6.5rem);
-    margin-top: 0.75rem;
+    font-size: clamp(3.2rem, 13vw, 7rem);
+    margin-top: 1rem;
   }
 
   .page-head__lede {
-    margin-top: 1.25rem;
+    margin-top: 1.5rem;
     max-width: 48ch;
     color: var(--color-ink-soft);
     font-size: var(--fs-1);
   }
 
   .links {
-    padding-bottom: clamp(4rem, 10vw, 7rem);
+    padding-top: clamp(1rem, 3vw, 2rem);
+    padding-bottom: var(--section-space);
     border-top: 1px solid var(--color-line);
   }
 

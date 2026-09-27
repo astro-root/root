@@ -3,17 +3,19 @@
    ========================================================================== */
 
 :root {
-  /* Color — paper-and-ink lab notebook, one instrument-glow accent. */
-  --color-bg: #faf9f6;
-  --color-bg-raised: #f2f1ec;
-  --color-ink: #14140f;
-  --color-ink-soft: #4b4c44;
-  --color-muted: #83837a;
-  --color-line: #dedcd3;
-  --color-line-strong: #c6c4b8;
-  --color-accent: #2c4bd6; /* Cherenkov blue — the glow of the instrument */
-  --color-accent-soft: #e7ebfb;
-  --color-accent-ink: #16266b;
+  /* Color — an observatory at night: graphite, not black; paper-white ink;
+     one instrument-glow accent used sparingly. No purple, no neon. */
+  --color-bg: #0a0b0d;
+  --color-bg-raised: #111317;
+  --color-bg-panel: #14161b;
+  --color-ink: #f1efe8;
+  --color-ink-soft: #b8b6ac;
+  --color-muted: #6e716f;
+  --color-line: #21242a;
+  --color-line-strong: #31353d;
+  --color-accent: #5b7fff; /* Cherenkov blue — the glow of the instrument */
+  --color-accent-soft: #161d33;
+  --color-accent-ink: #c9d3ff;
 
   /* Type */
   --font-sans: 'IBM Plex Sans', 'Noto Sans JP', -apple-system, sans-serif;
@@ -28,16 +30,17 @@
   --fs-4: 2.5rem;
   --fs-5: 3.75rem;
   --fs-6: 5.5rem;
-  --fs-7: 8.5rem;
+  --fs-7: 9.5rem;
 
   --lh-tight: 1.05;
   --lh-snug: 1.3;
   --lh-body: 1.7;
 
-  /* Layout */
+  /* Layout — whitespace is a design element, not leftover space. */
   --measure: 62ch;
-  --gutter: clamp(1.25rem, 4vw, 3rem);
-  --content-max: 1400px;
+  --gutter: clamp(1.5rem, 5vw, 5rem);
+  --content-max: 1440px;
+  --section-space: clamp(6rem, 14vw, 12rem);
   --radius: 2px;
 
   /* Motion */
@@ -46,36 +49,6 @@
   --dur-med: 480ms;
   --dur-slow: 900ms;
 
-  color-scheme: light;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) {
-    --color-bg: #101110;
-    --color-bg-raised: #171816;
-    --color-ink: #f2f1ea;
-    --color-ink-soft: #c7c6bb;
-    --color-muted: #83837a;
-    --color-line: #2a2b27;
-    --color-line-strong: #3a3b35;
-    --color-accent: #6a8bff;
-    --color-accent-soft: #1c2440;
-    --color-accent-ink: #d6deff;
-    color-scheme: dark;
-  }
-}
-
-:root[data-theme='dark'] {
-  --color-bg: #101110;
-  --color-bg-raised: #171816;
-  --color-ink: #f2f1ea;
-  --color-ink-soft: #c7c6bb;
-  --color-muted: #83837a;
-  --color-line: #2a2b27;
-  --color-line-strong: #3a3b35;
-  --color-accent: #6a8bff;
-  --color-accent-soft: #1c2440;
-  --color-accent-ink: #d6deff;
   color-scheme: dark;
 }
 

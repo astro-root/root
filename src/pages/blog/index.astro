@@ -1,34 +1,37 @@
 ---
-import { getCollection } from 'astro:content';
+export const prerender = false;
+
 import Layout from '@/layouts/Layout.astro';
 import NoteRow from '@/components/NoteRow.astro';
+import CosmicField from '@/components/CosmicField.astro';
+import { getPosts } from '@/lib/content';
 
-const posts = (await getCollection('blog', ({ data }) => data.published)).sort(
-  (a, b) => b.data.date.valueOf() - a.data.date.valueOf()
-);
-
-const categories = [...new Set(posts.map((p) => p.data.category))];
+const posts = await getPosts();
+const categories = [...new Set(posts.map((p) => p.category))];
 ---
 
 <Layout
   title="Blog"
   description="観測記録、物理の考察、制作の過程など、Rootが書きためているノート。"
 >
-  <section class="page-head wrap">
-    <p class="eyebrow">Field Notes</p>
-    <h1>Blog</h1>
-    <p class="page-head__lede">
-      観測の記録、物理の考察、制作の過程。まとまった記事というより、気づいたことのノートに近い。
-    </p>
-    {
-      categories.length > 0 && (
-        <p class="page-head__categories">
-          {categories.map((c) => (
-            <span>{c}</span>
-          ))}
-        </p>
-      )
-    }
+  <section class="page-head">
+    <CosmicField variant="quiet" />
+    <div class="wrap page-head__inner">
+      <p class="eyebrow">Laboratory Notes</p>
+      <h1>Notes</h1>
+      <p class="page-head__lede">
+        観測の記録、物理の考察、制作の過程。まとまった記事というより、研究ノートに近い、気づいたことの記録。
+      </p>
+      {
+        categories.length > 0 && (
+          <p class="page-head__categories">
+            {categories.map((c) => (
+              <span>{c}</span>
+            ))}
+          </p>
+        )
+      }
+    </div>
   </section>
 
   <section class="list wrap">
@@ -44,17 +47,24 @@ const categories = [...new Set(posts.map((p) => p.data.category))];
 
 <style>
   .page-head {
-    padding-top: clamp(6rem, 14vw, 9rem);
-    padding-bottom: clamp(2rem, 5vw, 3rem);
+    position: relative;
+    overflow: hidden;
+    padding-top: clamp(7rem, 16vw, 11rem);
+    padding-bottom: clamp(3rem, 7vw, 5rem);
+  }
+
+  .page-head__inner {
+    position: relative;
+    z-index: 1;
   }
 
   .page-head h1 {
-    font-size: clamp(3rem, 12vw, 6.5rem);
-    margin-top: 0.75rem;
+    font-size: clamp(3.2rem, 13vw, 7rem);
+    margin-top: 1rem;
   }
 
   .page-head__lede {
-    margin-top: 1.25rem;
+    margin-top: 1.5rem;
     max-width: 52ch;
     color: var(--color-ink-soft);
     font-size: var(--fs-1);
@@ -64,14 +74,15 @@ const categories = [...new Set(posts.map((p) => p.data.category))];
     display: flex;
     flex-wrap: wrap;
     gap: 0.4rem 1rem;
-    margin-top: 1.5rem;
+    margin-top: 2rem;
     font-family: var(--font-mono);
     font-size: var(--fs-000);
     color: var(--color-muted);
   }
 
   .list {
-    padding-bottom: clamp(3rem, 8vw, 5rem);
+    padding-top: clamp(1rem, 3vw, 2rem);
+    padding-bottom: var(--section-space);
   }
 
   .list :global(.note:last-child) {

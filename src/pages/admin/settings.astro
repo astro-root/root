@@ -1,0 +1,120 @@
+---
+export const prerender = false;
+import AdminLayout from '@/layouts/AdminLayout.astro';
+---
+
+<AdminLayout title="Settings" active="settings">
+  <div class="admin-heading">
+    <h1>Site Settings</h1>
+  </div>
+
+  <p id="loading" class="loading-note">読み込み中…</p>
+  <div id="status-msg-holder"></div>
+
+  <form id="settings-form" class="panel" hidden novalidate>
+    <div class="field">
+      <label for="heroTagline">Hero tagline</label>
+      <input id="heroTagline" type="text" />
+    </div>
+    <div class="field">
+      <label for="heroLede">Hero lede（説明文）</label>
+      <textarea id="heroLede" rows="3"></textarea>
+    </div>
+    <div class="field">
+      <label for="siteDescription">Site description（SEO用の説明文）</label>
+      <textarea id="siteDescription" rows="2"></textarea>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="contactEmail">Contact email</label>
+        <input id="contactEmail" type="email" />
+      </div>
+      <div class="field">
+        <label for="githubUrl">GitHub URL</label>
+        <input id="githubUrl" type="url" />
+      </div>
+      <div class="field">
+        <label for="xUrl">X URL</label>
+        <input id="xUrl" type="url" />
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="footerNote">Footer note</label>
+      <input id="footerNote" type="text" placeholder="© Root" />
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" id="submit-btn">保存する</button>
+    </div>
+  </form>
+</AdminLayout>
+
+<script>
+  import { requireAdmin, getDb, doc, getDoc, setDoc } from '@/lib/firebase-client';
+
+  await requireAdmin();
+  const db = getDb();
+
+  const DEFAULTS = {
+    heroTagline: 'Science. Software. Ideas.',
+    heroLede:
+      '興味を持ったものを観測し、考え、作る。天文・物理・科学と、Web開発・ソフトウェアを横断しながら実験を続ける個人のラボラトリー。',
+    siteDescription:
+      '高校生Rootが、天文・物理・科学とソフトウェア開発を横断しながら研究・制作・実験する個人ラボラトリー。',
+    contactEmail: 'contact@astro-root.com',
+    githubUrl: 'https://github.com/',
+    xUrl: 'https://x.com/',
+    footerNote: '© Root'
+  };
+
+  const form = document.getElementById('settings-form') as HTMLFormElement;
+
+  function field(fid: string) {
+    return document.getElementById(fid) as HTMLInputElement | HTMLTextAreaElement;
+  }
+
+  function showMsg(msg: string, ok = true) {
+    document.getElementById('status-msg-holder')!.innerHTML =
+      `<p class="status-msg ${ok ? 'ok' : 'err'}">${msg}</p>`;
+  }
+
+  const snap = await getDoc(doc(db, 'settings', 'site'));
+  const d = snap.exists() ? (snap.data() as any) : {};
+  for (const key of Object.keys(DEFAULTS) as (keyof typeof DEFAULTS)[]) {
+    field(key).value = d[key] ?? DEFAULTS[key];
+  }
+
+  document.getElementById('loading')!.setAttribute('hidden', '');
+  form.hidden = false;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement;
+    submitBtn.disabled = true;
+    submitBtn.textContent = '保存中…';
+
+    const payload: Record<string, string> = {};
+    for (const key of Object.keys(DEFAULTS)) {
+      payload[key] = field(key).value.trim();
+    }
+
+    try {
+      await setDoc(doc(db, 'settings', 'site'), payload, { merge: true });
+      showMsg('保存しました。サイトに反映されています。');
+    } catch (err: any) {
+      showMsg(`保存に失敗しました: ${err.message ?? err}`, false);
+    }
+    submitBtn.disabled = false;
+    submitBtn.textContent = '保存する';
+  });
+</script>
+
+<style>
+  .form-actions {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-line);
+  }
+</style>

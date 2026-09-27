@@ -3,3 +3,6 @@ dist/
 .astro/
 .env
 .DS_Store
+.env
+scripts/service-account.json
+.wrangler/

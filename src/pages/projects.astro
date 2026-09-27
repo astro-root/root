@@ -1,23 +1,27 @@
 ---
-import { getCollection } from 'astro:content';
+export const prerender = false;
+
 import Layout from '@/layouts/Layout.astro';
 import ProjectEntry from '@/components/ProjectEntry.astro';
+import CosmicField from '@/components/CosmicField.astro';
+import { getProjects } from '@/lib/content';
 
-const projects = (await getCollection('projects')).sort(
-  (a, b) => a.data.order - b.data.order
-);
+const projects = await getProjects();
 ---
 
 <Layout
   title="Projects"
   description="Rootが制作しているWebサービス・ソフトウェア・実験的なプロジェクトの一覧。"
 >
-  <section class="page-head wrap">
-    <p class="eyebrow">Catalog</p>
-    <h1>Projects</h1>
-    <p class="page-head__lede">
-      完成しているものも、途中のものも、同じ棚に並べている。制作順ではなく、思いつきや必要に応じて番号を振った記録の一覧。
-    </p>
+  <section class="page-head">
+    <CosmicField variant="quiet" />
+    <div class="wrap page-head__inner">
+      <p class="eyebrow">Catalog</p>
+      <h1>Projects</h1>
+      <p class="page-head__lede">
+        完成しているものも、途中のものも、同じ棚に並べている。制作順ではなく、思いつきや必要に応じて番号を振った記録の一覧。研究対象を一つずつ選ぶように眺めてください。
+      </p>
+    </div>
   </section>
 
   <section class="catalog wrap">
@@ -31,24 +35,32 @@ const projects = (await getCollection('projects')).sort(
 
 <style>
   .page-head {
-    padding-top: clamp(6rem, 14vw, 9rem);
-    padding-bottom: clamp(2rem, 5vw, 3rem);
+    position: relative;
+    overflow: hidden;
+    padding-top: clamp(7rem, 16vw, 11rem);
+    padding-bottom: clamp(3rem, 7vw, 5rem);
+  }
+
+  .page-head__inner {
+    position: relative;
+    z-index: 1;
   }
 
   .page-head h1 {
-    font-size: clamp(3rem, 12vw, 6.5rem);
-    margin-top: 0.75rem;
+    font-size: clamp(3.2rem, 13vw, 7rem);
+    margin-top: 1rem;
   }
 
   .page-head__lede {
-    margin-top: 1.25rem;
+    margin-top: 1.5rem;
     max-width: 52ch;
     color: var(--color-ink-soft);
     font-size: var(--fs-1);
   }
 
   .catalog {
-    padding-bottom: clamp(3rem, 8vw, 5rem);
+    padding-top: clamp(1rem, 3vw, 2rem);
+    padding-bottom: var(--section-space);
   }
 
   .catalog :global(.entry:last-child) {

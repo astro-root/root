@@ -1,0 +1,194 @@
+---
+export const prerender = false;
+import AdminLayout from '@/layouts/AdminLayout.astro';
+
+const CATEGORIES = ['Astronomy', 'Physics', 'Software', 'Web Development', 'Science', 'Notes'];
+---
+
+<AdminLayout title="Note editor" active="blog">
+  <div class="admin-heading">
+    <h1 id="form-title">Note</h1>
+    <a class="btn" href="/admin/blog">← 一覧へ</a>
+  </div>
+
+  <p id="loading" class="loading-note">読み込み中…</p>
+  <div id="status-msg-holder"></div>
+
+  <form id="post-form" class="panel" hidden novalidate>
+    <div class="field">
+      <label for="title">Title *</label>
+      <input id="title" required type="text" />
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="slug">Slug（URL、空欄で自動生成）</label>
+        <input id="slug" type="text" placeholder="my-post-title" />
+      </div>
+      <div class="field">
+        <label for="date">Date *</label>
+        <input id="date" required type="date" />
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="category">Category *</label>
+      <select id="category" required>
+        {CATEGORIES.map((c) => <option value={c}>{c}</option>)}
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="tags">Tags（カンマ区切り）</label>
+      <input id="tags" type="text" placeholder="物理, 覚え書き" />
+    </div>
+
+    <div class="field">
+      <label for="excerpt">Excerpt（一覧に表示する短い要約） *</label>
+      <textarea id="excerpt" required rows="2"></textarea>
+    </div>
+
+    <div class="field">
+      <label for="content">Content（Markdown） *</label>
+      <textarea id="content" required rows="16"></textarea>
+    </div>
+
+    <div class="field-row">
+      <div class="field checkbox-field">
+        <input id="published" type="checkbox" checked />
+        <label for="published">公開する（Published）</label>
+      </div>
+      <div class="field checkbox-field">
+        <input id="featured" type="checkbox" />
+        <label for="featured">Featured</label>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" id="submit-btn">保存する</button>
+      <button type="button" class="btn btn-danger" id="delete-btn" hidden>この記事を削除</button>
+    </div>
+  </form>
+</AdminLayout>
+
+<script>
+  import {
+    requireAdmin,
+    getDb,
+    doc,
+    getDoc,
+    collection,
+    addDoc,
+    updateDoc,
+    deleteDoc
+  } from '@/lib/firebase-client';
+
+  await requireAdmin();
+  const db = getDb();
+
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+
+  const form = document.getElementById('post-form') as HTMLFormElement;
+  const deleteBtn = document.getElementById('delete-btn') as HTMLButtonElement;
+
+  function field(fid: string) {
+    return document.getElementById(fid) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+  }
+
+  function showMsg(msg: string, ok = true) {
+    document.getElementById('status-msg-holder')!.innerHTML =
+      `<p class="status-msg ${ok ? 'ok' : 'err'}">${msg}</p>`;
+  }
+
+  function slugify(text: string) {
+    return text
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-');
+  }
+
+  if (id) {
+    document.getElementById('form-title')!.textContent = 'Edit Note';
+    const snap = await getDoc(doc(db, 'blog', id));
+    if (snap.exists()) {
+      const d = snap.data() as any;
+      (field('title') as HTMLInputElement).value = d.title ?? '';
+      (field('slug') as HTMLInputElement).value = d.slug ?? '';
+      (field('date') as HTMLInputElement).value = (d.date ?? '').slice(0, 10);
+      (field('category') as HTMLSelectElement).value = d.category ?? 'Notes';
+      (field('tags') as HTMLInputElement).value = (d.tags ?? []).join(', ');
+      (field('excerpt') as HTMLTextAreaElement).value = d.excerpt ?? '';
+      (field('content') as HTMLTextAreaElement).value = d.content ?? '';
+      (field('published') as HTMLInputElement).checked = Boolean(d.published);
+      (field('featured') as HTMLInputElement).checked = Boolean(d.featured);
+      deleteBtn.hidden = false;
+    } else {
+      showMsg('指定されたNoteが見つかりませんでした。', false);
+    }
+  } else {
+    document.getElementById('form-title')!.textContent = 'New Note';
+    (field('date') as HTMLInputElement).value = new Date().toISOString().slice(0, 10);
+  }
+
+  document.getElementById('loading')!.setAttribute('hidden', '');
+  form.hidden = false;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement;
+    submitBtn.disabled = true;
+    submitBtn.textContent = '保存中…';
+
+    const title = (field('title') as HTMLInputElement).value.trim();
+    const slugInput = (field('slug') as HTMLInputElement).value.trim();
+
+    const payload = {
+      title,
+      slug: slugInput ? slugify(slugInput) : slugify(title),
+      date: (field('date') as HTMLInputElement).value,
+      category: (field('category') as HTMLSelectElement).value,
+      tags: (field('tags') as HTMLInputElement).value
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean),
+      excerpt: (field('excerpt') as HTMLTextAreaElement).value.trim(),
+      content: (field('content') as HTMLTextAreaElement).value,
+      published: (field('published') as HTMLInputElement).checked,
+      featured: (field('featured') as HTMLInputElement).checked
+    };
+
+    try {
+      if (id) {
+        await updateDoc(doc(db, 'blog', id), payload);
+      } else {
+        await addDoc(collection(db, 'blog'), payload);
+      }
+      window.location.href = '/admin/blog';
+    } catch (err: any) {
+      showMsg(`保存に失敗しました: ${err.message ?? err}`, false);
+      submitBtn.disabled = false;
+      submitBtn.textContent = '保存する';
+    }
+  });
+
+  deleteBtn.addEventListener('click', async () => {
+    if (!id) return;
+    if (!confirm('この記事を削除しますか？この操作は取り消せません。')) return;
+    await deleteDoc(doc(db, 'blog', id));
+    window.location.href = '/admin/blog';
+  });
+</script>
+
+<style>
+  .form-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-line);
+  }
+</style>

@@ -1,5 +1,6 @@
 ---
 import Layout from '@/layouts/Layout.astro';
+import CosmicField from '@/components/CosmicField.astro';
 ---
 
 <Layout
@@ -7,23 +8,33 @@ import Layout from '@/layouts/Layout.astro';
   description="お探しのページが見つかりませんでした。"
   noIndex
 >
-  <section class="not-found wrap">
-    <p class="eyebrow">Error</p>
-    <h1>404</h1>
-    <p class="not-found__text">
-      このページは存在しないか、移動しました。観測範囲の外だったようです。
-    </p>
-    <a class="not-found__link" href="/">← ホームへ戻る</a>
+  <section class="not-found">
+    <CosmicField variant="quiet" />
+    <div class="wrap not-found__inner">
+      <p class="eyebrow">Error</p>
+      <h1>404</h1>
+      <p class="not-found__text">
+        このページは存在しないか、移動しました。観測範囲の外だったようです。
+      </p>
+      <a class="not-found__link" href="/">← ホームへ戻る</a>
+    </div>
   </section>
 </Layout>
 
 <style>
   .not-found {
+    position: relative;
+    overflow: hidden;
     min-height: 70svh;
     display: flex;
     flex-direction: column;
     justify-content: center;
     padding-block: clamp(4rem, 12vw, 8rem);
+  }
+
+  .not-found__inner {
+    position: relative;
+    z-index: 1;
   }
 
   .not-found h1 {
