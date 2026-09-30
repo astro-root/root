@@ -2,6 +2,8 @@
 
 Root's Laboratory の個人サイト。Astro（SSR / Cloudflare Pages）+ Firebase（Auth + Firestore）構成。
 
+デザインはモダンなプロダクトUI寄り（Inter + IBM Plex Mono、ライト/ダーク切り替え、角丸カード＋バッジ）。ナビゲーション右上のアイコンでテーマを切り替えられます（選択は localStorage に保存）。
+
 - 公開サイトは Firestore からリクエスト時にデータを読む（Adminで保存 → 即座にサイトに反映）
 - Firebase未設定でも壊れない：`src/content/` のMarkdownに自動フォールバックする
 - Admin (`/admin`) の権限チェックは **Firestore Security Rules** が本体。フロントエンドのガードはUXのためだけ

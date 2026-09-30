@@ -41,21 +41,18 @@ const activity = [
   <Opening />
 
   <section class="hero">
-    <CosmicField variant="full" />
+    <CosmicField variant="quiet" />
     <div class="wrap hero__inner">
-      <p class="hero__coord eyebrow">OBSERVATORY LOG — ROOT</p>
+      <p class="hero__eyebrow eyebrow">Root's Laboratory</p>
       <h1 class="hero__title">
-        <span>ROOT'S</span>
-        <span>LABORATORY</span>
+        天文・物理・ソフトウェアを<br />横断する、個人のラボ
       </h1>
-      <div class="hero__foot">
-        <p class="hero__tagline">{settings.heroTagline}</p>
-        <p class="hero__lede">{settings.heroLede}</p>
+      <p class="hero__lede">{settings.heroLede}</p>
+      <div class="hero__actions">
+        <a class="btn-primary" href="/projects">Projectsを見る</a>
+        <a class="btn-secondary" href="/about">Aboutを読む</a>
       </div>
-    </div>
-    <div class="hero__scroll" aria-hidden="true">
-      <span></span>
-      <p>Scroll</p>
+      <p class="hero__tagline">{settings.heroTagline}</p>
     </div>
   </section>
 
@@ -93,11 +90,7 @@ const activity = [
     </div>
 
     <div class="featured__list">
-      {
-        featured.map((project, i) => (
-          <ProjectEntry project={project} index={i + 1} variant="compact" />
-        ))
-      }
+      {featured.map((project) => <ProjectEntry project={project} variant="compact" />)}
     </div>
 
     <a class="section-link" href="/projects">View all projects →</a>
@@ -136,104 +129,50 @@ const activity = [
 
 <style>
   .hero {
-    min-height: 100svh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
     position: relative;
-    padding-top: 5rem;
+    padding-top: clamp(7rem, 14vw, 9rem);
+    padding-bottom: clamp(4rem, 8vw, 6rem);
     overflow: hidden;
   }
 
   .hero__inner {
     position: relative;
     z-index: 1;
-    padding-block: 2rem;
+    max-width: 46rem;
   }
 
-  .hero__coord {
-    margin-bottom: clamp(1.5rem, 4vw, 2.5rem);
+  .hero__eyebrow {
+    margin-bottom: 1rem;
     color: var(--color-accent);
   }
 
   .hero__title {
-    display: flex;
-    flex-direction: column;
-    font-size: clamp(3.4rem, 14vw, var(--fs-7));
-    font-weight: 600;
-    letter-spacing: -0.03em;
-    line-height: 0.9;
-  }
-
-  .hero__foot {
-    margin-top: clamp(3rem, 8vw, 5.5rem);
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 1.5rem 3rem;
-    border-top: 1px solid var(--color-line);
-    padding-top: clamp(1.5rem, 3vw, 2rem);
-  }
-
-  .hero__tagline {
-    font-family: var(--font-mono);
-    font-size: clamp(0.85rem, 1.6vw, 1.05rem);
-    color: var(--color-accent);
-    letter-spacing: 0.04em;
-    white-space: nowrap;
+    font-size: clamp(2.2rem, 5.5vw, var(--fs-7));
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: var(--lh-tight);
   }
 
   .hero__lede {
-    max-width: 42ch;
+    margin-top: 1.25rem;
+    max-width: 52ch;
     color: var(--color-ink-soft);
-    font-size: var(--fs-0);
+    font-size: var(--fs-1);
   }
 
-  .hero__scroll {
-    position: absolute;
-    bottom: 2.5rem;
-    left: var(--gutter);
+  .hero__actions {
     display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    z-index: 1;
+    flex-wrap: wrap;
+    gap: 0.9rem;
+    margin-top: 2rem;
   }
 
-  .hero__scroll span {
-    width: 1px;
-    height: 2.5rem;
-    background: var(--color-line-strong);
-    position: relative;
-    overflow: hidden;
-  }
-
-  .hero__scroll span::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: var(--color-accent);
-    transform: translateY(-100%);
-    animation: scroll-line 2.4s var(--ease-lab) infinite;
-  }
-
-  .hero__scroll p {
+  .hero__tagline {
+    margin-top: 1.75rem;
     font-family: var(--font-mono);
     font-size: var(--fs-000);
     color: var(--color-muted);
-  }
-
-  @keyframes scroll-line {
-    0% { transform: translateY(-100%); }
-    50% { transform: translateY(0); }
-    100% { transform: translateY(100%); }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .hero__scroll span::after {
-      animation: none;
-      transform: translateY(0);
-    }
+    letter-spacing: 0.03em;
   }
 
   /* ---- Statement --------------------------------------------------- */
@@ -290,6 +229,12 @@ const activity = [
   .about-teaser {
     padding-block: var(--section-space);
     border-top: 1px solid var(--color-line);
+  }
+
+  .featured__list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.25rem;
   }
 
   /* ---- Observe / Think / Build --------------------------------------- */

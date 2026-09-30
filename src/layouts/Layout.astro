@@ -55,14 +55,21 @@ const ogImageURL = new URL(image, Astro.site);
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
 
     <script is:inline>
-      // Runs before first paint: skip the opening sequence on repeat visits
-      // within the same session, so it never re-plays on internal navigation.
+      // Runs before first paint, to avoid any flash of the wrong state.
       (function () {
+        try {
+          var storedTheme = localStorage.getItem('rl-theme');
+          if (storedTheme === 'light' || storedTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', storedTheme);
+          }
+        } catch {
+          /* private mode — falls back to the OS theme */
+        }
         try {
           if (sessionStorage.getItem('rl-opening-seen') === '1') {
             document.documentElement.classList.add('no-opening');

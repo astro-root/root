@@ -16,20 +16,18 @@ const projects = await getProjects();
   <section class="page-head">
     <CosmicField variant="quiet" />
     <div class="wrap page-head__inner">
-      <p class="eyebrow">Catalog</p>
-      <h1>Projects</h1>
+      <p class="eyebrow">Projects</p>
+      <h1>作っているもの</h1>
       <p class="page-head__lede">
-        完成しているものも、途中のものも、同じ棚に並べている。制作順ではなく、思いつきや必要に応じて番号を振った記録の一覧。研究対象を一つずつ選ぶように眺めてください。
+        完成しているものも、まだ途中のものも並んでいます。気になるものから見てください。
       </p>
     </div>
   </section>
 
   <section class="catalog wrap">
-    {
-      projects.map((project, i) => (
-        <ProjectEntry project={project} index={i + 1} variant="full" />
-      ))
-    }
+    <div class="project-grid">
+      {projects.map((project) => <ProjectEntry project={project} variant="full" />)}
+    </div>
   </section>
 </Layout>
 
@@ -61,6 +59,12 @@ const projects = await getProjects();
   .catalog {
     padding-top: clamp(1rem, 3vw, 2rem);
     padding-bottom: var(--section-space);
+  }
+
+  .project-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.25rem;
   }
 
   .catalog :global(.entry:last-child) {
