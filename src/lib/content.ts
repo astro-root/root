@@ -113,6 +113,11 @@ export async function getProjects(): Promise<Project[]> {
     .sort((a, b2) => a.order - b2.order);
 }
 
+export async function getProjectById(id: string): Promise<Project | null> {
+  const projects = await getProjects();
+  return projects.find((p) => p.id === id) ?? null;
+}
+
 // --------------------------------------------------------------------- Blog
 async function renderMarkdown(md: string): Promise<string> {
   return marked.parse(md, { async: false }) as string;
@@ -178,7 +183,7 @@ export async function getPostBySlug(slug: string): Promise<Post | null> {
 export async function getAbout(): Promise<About> {
   const defaults = {
     based: 'Japan',
-    status: 'Student, building on the side',
+    status: 'Student / Developer / Quiz Player',
     currently: 'Q-Room, physics notes'
   };
 

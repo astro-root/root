@@ -3,35 +3,14 @@ export const prerender = false;
 
 import Layout from '@/layouts/Layout.astro';
 import NoteRow from '@/components/NoteRow.astro';
-import CosmicField from '@/components/CosmicField.astro';
 import { getPosts } from '@/lib/content';
 
 const posts = await getPosts();
-const categories = [...new Set(posts.map((p) => p.category))];
 ---
 
-<Layout
-  title="Blog"
-  description="観測記録、物理の考察、制作の過程など、Rootが書きためているノート。"
->
-  <section class="page-head">
-    <CosmicField variant="quiet" />
-    <div class="wrap page-head__inner">
-      <p class="eyebrow">Laboratory Notes</p>
-      <h1>Notes</h1>
-      <p class="page-head__lede">
-        観測の記録、物理の考察、制作の過程。まとまった記事というより、研究ノートに近い、気づいたことの記録。
-      </p>
-      {
-        categories.length > 0 && (
-          <p class="page-head__categories">
-            {categories.map((c) => (
-              <span>{c}</span>
-            ))}
-          </p>
-        )
-      }
-    </div>
+<Layout title="Notes" description="Rootが書きためている記録。">
+  <section class="wrap page-head">
+    <h1>Notes</h1>
   </section>
 
   <section class="list wrap">
@@ -39,7 +18,7 @@ const categories = [...new Set(posts.map((p) => p.category))];
       posts.length > 0 ? (
         posts.map((post) => <NoteRow post={post} />)
       ) : (
-        <p class="list__empty">まだ記事がありません。近いうちに書きます。</p>
+        <p class="list__empty">まだ記事がありません。</p>
       )
     }
   </section>
@@ -47,41 +26,16 @@ const categories = [...new Set(posts.map((p) => p.category))];
 
 <style>
   .page-head {
-    position: relative;
-    overflow: hidden;
-    padding-top: clamp(7rem, 16vw, 11rem);
-    padding-bottom: clamp(3rem, 7vw, 5rem);
-  }
-
-  .page-head__inner {
-    position: relative;
-    z-index: 1;
+    padding-top: clamp(5rem, 10vw, 7rem);
+    padding-bottom: clamp(1.5rem, 4vw, 2.5rem);
   }
 
   .page-head h1 {
-    font-size: clamp(3.2rem, 13vw, 7rem);
-    margin-top: 1rem;
-  }
-
-  .page-head__lede {
-    margin-top: 1.5rem;
-    max-width: 52ch;
-    color: var(--color-ink-soft);
-    font-size: var(--fs-1);
-  }
-
-  .page-head__categories {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem 1rem;
-    margin-top: 2rem;
-    font-family: var(--font-mono);
-    font-size: var(--fs-000);
-    color: var(--color-muted);
+    font-size: clamp(2rem, 5vw, 2.75rem);
+    font-weight: 600;
   }
 
   .list {
-    padding-top: clamp(1rem, 3vw, 2rem);
     padding-bottom: var(--section-space);
   }
 

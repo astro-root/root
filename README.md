@@ -2,7 +2,7 @@
 
 Root's Laboratory の個人サイト。Astro（SSR / Cloudflare Pages）+ Firebase（Auth + Firestore）構成。
 
-デザインはモダンなプロダクトUI寄り（Inter + IBM Plex Mono、ライト/ダーク切り替え、角丸カード＋バッジ）。ナビゲーション右上のアイコンでテーマを切り替えられます（選択は localStorage に保存）。
+デザインはミニマル・タイポグラフィ中心（Inter + IBM Plex Mono、ほぼ白黒、カード/バッジなし）。Home は「Root」と4つの導線だけ。Projectsは年ごとのタイポグラフィ一覧＋詳細ページ（`/projects/[id]`）、Notesは日付+タイトルのログ形式。ナビゲーション右上のアイコンでライト/ダークを切り替えられます（選択は localStorage に保存）。
 
 - 公開サイトは Firestore からリクエスト時にデータを読む（Adminで保存 → 即座にサイトに反映）
 - Firebase未設定でも壊れない：`src/content/` のMarkdownに自動フォールバックする
@@ -25,7 +25,7 @@ npm run preview  # wrangler pages dev でビルド結果をローカル確認（
 
 ## 2. Firebaseのセットアップ（Admin機能に必須）
 
-所要時間の目安は10〜15分です。
+**ここはあなたご自身のGoogleアカウントで行う必要があります。** 私（Claude）が代わりに作ることはできません。所要時間の目安は10〜15分です。
 
 ### 2-1. プロジェクト作成
 

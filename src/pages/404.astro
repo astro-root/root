@@ -1,6 +1,5 @@
 ---
 import Layout from '@/layouts/Layout.astro';
-import CosmicField from '@/components/CosmicField.astro';
 ---
 
 <Layout
@@ -9,7 +8,6 @@ import CosmicField from '@/components/CosmicField.astro';
   noIndex
 >
   <section class="not-found">
-    <CosmicField variant="quiet" />
     <div class="wrap not-found__inner">
       <p class="eyebrow">Error</p>
       <h1>404</h1>
@@ -38,9 +36,8 @@ import CosmicField from '@/components/CosmicField.astro';
   }
 
   .not-found h1 {
-    font-size: clamp(4rem, 16vw, 9rem);
+    font-size: clamp(3rem, 10vw, 5rem);
     margin-top: 0.75rem;
-    color: var(--color-accent);
   }
 
   .not-found__text {

@@ -94,7 +94,7 @@ async function seedAbout() {
   await db.collection('about').doc('main').set({
     bodyMarkdown: entry.content.trim(),
     based: 'Japan',
-    status: 'Student, building on the side',
+    status: 'Student / Developer / Quiz Player',
     currently: 'Q-Room, physics notes',
     updated: new Date().toISOString()
   });

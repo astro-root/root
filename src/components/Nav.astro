@@ -1,8 +1,8 @@
 ---
 const nav = [
-  { href: '/about', label: 'About' },
   { href: '/projects', label: 'Projects' },
-  { href: '/blog', label: 'Blog' },
+  { href: '/blog', label: 'Notes' },
+  { href: '/about', label: 'About' },
   { href: '/contact', label: 'Contact' }
 ];
 const path = Astro.url.pathname;
@@ -10,8 +10,8 @@ const path = Astro.url.pathname;
 
 <header class="site-nav" id="site-nav">
   <div class="site-nav__bar wrap">
-    <a href="/" class="site-nav__mark" aria-label="Root's Laboratory — home">
-      ROOT'S<br />LABORATORY
+    <a href="/" class="site-nav__mark" aria-label="Root — home">
+      Root
     </a>
 
     <nav class="site-nav__links" aria-label="Primary">
@@ -97,10 +97,11 @@ const path = Astro.url.pathname;
   }
 
   .site-nav__mark {
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    letter-spacing: 0.03em;
-    line-height: 1.35;
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 1rem;
+    letter-spacing: -0.01em;
+    color: var(--color-ink);
     text-decoration: none;
     white-space: nowrap;
   }

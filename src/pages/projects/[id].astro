@@ -1,0 +1,132 @@
+---
+export const prerender = false;
+
+import Layout from '@/layouts/Layout.astro';
+import { getProjectById } from '@/lib/content';
+
+const { id } = Astro.params;
+const project = id ? await getProjectById(id) : null;
+
+if (!project) {
+  return Astro.redirect('/404');
+}
+
+const { title, summary, category, status, year, technology, url, github } = project;
+---
+
+<Layout title={title} description={summary}>
+  <article class="wrap post">
+    <a class="post__back" href="/projects">← Projects</a>
+
+    <h1 class="post__title">{title}</h1>
+    <p class="post__summary">{summary}</p>
+
+    <dl class="post__meta">
+      <div>
+        <dt>Year</dt>
+        <dd>{year}</dd>
+      </div>
+      <div>
+        <dt>Status</dt>
+        <dd>{status}</dd>
+      </div>
+      <div>
+        <dt>Category</dt>
+        <dd>{category}</dd>
+      </div>
+      {
+        technology.length > 0 && (
+          <div>
+            <dt>Technology</dt>
+            <dd>{technology.join(' / ')}</dd>
+          </div>
+        )
+      }
+    </dl>
+
+    {
+      (url || github) && (
+        <p class="post__links">
+          {url && (
+            <a href={url} target="_blank" rel="noreferrer">
+              Live ↗
+            </a>
+          )}
+          {github && (
+            <a href={github} target="_blank" rel="noreferrer">
+              GitHub ↗
+            </a>
+          )}
+        </p>
+      )
+    }
+  </article>
+</Layout>
+
+<style>
+  .post {
+    padding-top: clamp(5rem, 10vw, 7rem);
+    padding-bottom: var(--section-space);
+    max-width: 42rem;
+  }
+
+  .post__back {
+    font-family: var(--font-mono);
+    font-size: var(--fs-000);
+    color: var(--color-muted);
+    text-decoration: none;
+  }
+
+  .post__back:hover {
+    color: var(--color-ink);
+  }
+
+  .post__title {
+    margin-top: 1.5rem;
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 600;
+  }
+
+  .post__summary {
+    margin-top: 0.75rem;
+    color: var(--color-ink-soft);
+    font-size: var(--fs-1);
+    max-width: 46ch;
+  }
+
+  .post__meta {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-line);
+    display: grid;
+    gap: 0.9rem;
+  }
+
+  .post__meta div {
+    display: grid;
+    grid-template-columns: 8rem 1fr;
+    gap: 1rem;
+    font-size: var(--fs-00);
+  }
+
+  .post__meta dt {
+    font-family: var(--font-mono);
+    color: var(--color-muted);
+  }
+
+  .post__links {
+    margin-top: 2rem;
+    display: flex;
+    gap: 1.5rem;
+  }
+
+  .post__links a {
+    font-size: var(--fs-00);
+    text-decoration: underline;
+    text-decoration-color: var(--color-line-strong);
+  }
+
+  .post__links a:hover {
+    text-decoration-color: var(--color-ink);
+  }
+</style>

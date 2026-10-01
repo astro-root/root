@@ -2,30 +2,23 @@
 // Runs once per session on the home page. Pure CSS drives the sequence
 // (so it still plays correctly with no JavaScript); a small script only
 // adds the skip control and remembers that the sequence has played.
+// Kept deliberately short — this draws "Root" and gets out of the way.
 const letters = ['R', 'o', 'o', 't'];
 ---
 
 <div class="opening" id="opening">
-  <div
-    class="opening__stage"
-    role="img"
-    aria-label="Root's Laboratory. Science. Software. Ideas."
-  >
-    <p class="opening__word" aria-hidden="true">
-      {
-        letters.map((letter, i) => (
-          <span class="opening__letter" style={`--i:${i}`}>
-            {letter}
-          </span>
-        ))
-      }
-    </p>
-    <p class="opening__brand" aria-hidden="true">ROOT'S LABORATORY</p>
-    <p class="opening__tagline" aria-hidden="true">Science. Software. Ideas.</p>
-  </div>
+  <p class="opening__word" role="img" aria-label="Root">
+    {
+      letters.map((letter, i) => (
+        <span class="opening__letter" aria-hidden="true" style={`--i:${i}`}>
+          {letter}
+        </span>
+      ))
+    }
+  </p>
 
   <button class="opening__skip" id="opening-skip" type="button">
-    Skip intro
+    Skip
   </button>
 </div>
 
@@ -35,17 +28,15 @@ const letters = ['R', 'o', 'o', 't'];
     inset: 0;
     z-index: 150;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: clamp(0.5rem, 2vw, 1rem);
     background: var(--color-bg);
-    animation: opening-exit 900ms var(--ease-lab) forwards;
-    animation-delay: 3.3s;
+    animation: opening-exit 500ms var(--ease-lab) forwards;
+    animation-delay: 1.5s;
   }
 
   .opening.is-skipping {
-    animation: opening-exit 500ms var(--ease-lab) forwards !important;
+    animation: opening-exit 300ms var(--ease-lab) forwards !important;
     animation-delay: 0ms !important;
   }
 
@@ -53,14 +44,10 @@ const letters = ['R', 'o', 'o', 't'];
     display: none;
   }
 
-  .opening__stage {
-    text-align: center;
-  }
-
   .opening__word {
     font-family: var(--font-sans);
     font-weight: 600;
-    font-size: clamp(3.5rem, 16vw, 9rem);
+    font-size: clamp(3rem, 14vw, 6.5rem);
     line-height: 1;
     letter-spacing: -0.02em;
   }
@@ -68,31 +55,11 @@ const letters = ['R', 'o', 'o', 't'];
   .opening__letter {
     display: inline-block;
     color: transparent;
-    -webkit-text-stroke: 1.5px var(--color-accent);
+    -webkit-text-stroke: 1.2px var(--color-ink);
     opacity: 0;
-    transform: translateY(0.2em);
-    animation: letter-draw 900ms var(--ease-lab) forwards;
-    animation-delay: calc(var(--i) * 150ms);
-  }
-
-  .opening__brand {
-    font-family: var(--font-mono);
-    font-size: clamp(0.85rem, 2vw, 1.05rem);
-    letter-spacing: 0.08em;
-    color: var(--color-ink-soft);
-    opacity: 0;
-    transform: translateY(6px);
-    animation: rise-in 700ms var(--ease-lab) forwards;
-    animation-delay: 1.55s;
-  }
-
-  .opening__tagline {
-    font-size: clamp(0.9rem, 2vw, 1.05rem);
-    color: var(--color-muted);
-    opacity: 0;
-    transform: translateY(6px);
-    animation: rise-in 700ms var(--ease-lab) forwards;
-    animation-delay: 2.05s;
+    transform: translateY(0.15em);
+    animation: letter-draw 550ms var(--ease-lab) forwards;
+    animation-delay: calc(var(--i) * 90ms);
   }
 
   .opening__skip {
@@ -102,37 +69,28 @@ const letters = ['R', 'o', 'o', 't'];
     font-family: var(--font-mono);
     font-size: var(--fs-000);
     color: var(--color-muted);
-    text-decoration: underline;
-    text-decoration-color: transparent;
     opacity: 0;
-    animation: rise-in 500ms var(--ease-lab) forwards;
-    animation-delay: 1s;
+    animation: rise-in 400ms var(--ease-lab) forwards;
+    animation-delay: 0.4s;
   }
 
   .opening__skip:hover,
   .opening__skip:focus-visible {
     color: var(--color-ink);
-    text-decoration-color: var(--color-line-strong);
   }
 
   @keyframes letter-draw {
     0% {
       opacity: 0;
-      transform: translateY(0.2em);
+      transform: translateY(0.15em);
       color: transparent;
-      -webkit-text-stroke: 1.5px var(--color-accent);
+      -webkit-text-stroke: 1.2px var(--color-ink);
     }
-    30% {
+    40% {
       opacity: 1;
       transform: translateY(0);
       color: transparent;
-      -webkit-text-stroke: 1.5px var(--color-accent);
-    }
-    75% {
-      opacity: 1;
-      transform: translateY(0);
-      color: transparent;
-      -webkit-text-stroke: 1.5px var(--color-accent);
+      -webkit-text-stroke: 1.2px var(--color-ink);
     }
     100% {
       opacity: 1;
@@ -145,13 +103,12 @@ const letters = ['R', 'o', 'o', 't'];
   @keyframes rise-in {
     to {
       opacity: 1;
-      transform: translateY(0);
     }
   }
 
   @keyframes opening-exit {
     0%,
-    88% {
+    80% {
       opacity: 1;
       visibility: visible;
     }
@@ -163,7 +120,7 @@ const letters = ['R', 'o', 'o', 't'];
 
   @media (prefers-reduced-motion: reduce) {
     .opening {
-      animation-delay: 0.6s;
+      animation-delay: 0.3s;
     }
   }
 </style>

@@ -3,21 +3,21 @@
    ========================================================================== */
 
 :root {
-  /* Color — clean, modern product UI. Light by default, dark via toggle. */
+  /* Color — almost grayscale. One quiet ink-blue used only for links/hover. */
   --color-bg: #ffffff;
-  --color-bg-raised: #f6f7f9;
+  --color-bg-raised: #fafafa;
   --color-bg-panel: #ffffff;
-  --color-ink: #14161a;
-  --color-ink-soft: #4b4f58;
-  --color-muted: #7c828d;
-  --color-line: #e7e9ed;
-  --color-line-strong: #d3d6dc;
-  --color-accent: #3b5bfd; /* same family as before, tuned for light backgrounds */
-  --color-accent-soft: #eef1ff;
-  --color-accent-ink: #2a3fc0;
-  --shadow-card: 0 1px 2px rgba(20, 22, 26, 0.04), 0 8px 24px -12px rgba(20, 22, 26, 0.12);
+  --color-ink: #111214;
+  --color-ink-soft: #55585f;
+  --color-muted: #8a8d94;
+  --color-line: #e9e9ea;
+  --color-line-strong: #d6d6d8;
+  --color-accent: #33384a; /* near-ink, just enough to read as "selected" */
+  --color-accent-soft: #f2f2f4;
+  --color-accent-ink: #111214;
+  --shadow-card: none;
 
-  /* Type — Inter for UI/reading, Plex Mono for data/labels */
+  /* Type — Inter for reading, Plex Mono only for numbers/dates */
   --font-sans: 'Inter', 'Noto Sans JP', -apple-system, sans-serif;
   --font-mono: 'IBM Plex Mono', 'Noto Sans Mono JP', ui-monospace, monospace;
 
@@ -30,20 +30,20 @@
   --fs-4: 2.1rem;
   --fs-5: 2.75rem;
   --fs-6: 3.5rem;
-  --fs-7: 4.25rem;
+  --fs-7: 4rem;
 
   --lh-tight: 1.15;
   --lh-snug: 1.35;
-  --lh-body: 1.7;
+  --lh-body: 1.75;
 
-  /* Layout — comfortable, product-like spacing, not gallery-scale whitespace */
-  --measure: 62ch;
-  --gutter: clamp(1.25rem, 4vw, 3rem);
-  --content-max: 1280px;
-  --section-space: clamp(3.5rem, 7vw, 6rem);
-  --radius: 10px;
-  --radius-sm: 6px;
-  --radius-pill: 999px;
+  /* Layout — quiet, generous, unhurried */
+  --measure: 60ch;
+  --gutter: clamp(1.25rem, 5vw, 4rem);
+  --content-max: 1100px;
+  --section-space: clamp(4rem, 9vw, 7rem);
+  --radius: 2px;
+  --radius-sm: 2px;
+  --radius-pill: 2px;
 
   /* Motion */
   --ease-lab: cubic-bezier(0.22, 0.61, 0.24, 1);
@@ -64,10 +64,10 @@
     --color-muted: #82858c;
     --color-line: #24262c;
     --color-line-strong: #34363d;
-    --color-accent: #7b93ff;
-    --color-accent-soft: #1a2140;
-    --color-accent-ink: #c3cdff;
-    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px -12px rgba(0, 0, 0, 0.5);
+    --color-accent: #c7c8cd;
+    --color-accent-soft: #1c1d21;
+    --color-accent-ink: #f1f1ee;
+    --shadow-card: none;
     color-scheme: dark;
   }
 }
@@ -81,10 +81,10 @@
   --color-muted: #82858c;
   --color-line: #24262c;
   --color-line-strong: #34363d;
-  --color-accent: #7b93ff;
-  --color-accent-soft: #1a2140;
-  --color-accent-ink: #c3cdff;
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px -12px rgba(0, 0, 0, 0.5);
+  --color-accent: #c7c8cd;
+  --color-accent-soft: #1c1d21;
+  --color-accent-ink: #f1f1ee;
+  --shadow-card: none;
   color-scheme: dark;
 }
 
@@ -204,34 +204,20 @@ button {
   align-items: center;
   gap: 0.4rem;
   font-size: var(--fs-00);
-  font-weight: 500;
-  padding: 0.7rem 1.3rem;
-  border-radius: var(--radius-sm);
+  color: var(--color-ink);
   text-decoration: none;
-  transition: background var(--dur-fast) var(--ease-lab), border-color var(--dur-fast) var(--ease-lab),
-    color var(--dur-fast) var(--ease-lab);
+  border-bottom: 1px solid var(--color-line-strong);
+  padding-bottom: 2px;
+  transition: border-color var(--dur-fast) var(--ease-lab), color var(--dur-fast) var(--ease-lab);
 }
 
 .btn-primary {
-  background: var(--color-accent);
-  color: #ffffff;
-  border: 1px solid var(--color-accent);
+  font-weight: 500;
 }
 
-.btn-primary:hover {
-  background: var(--color-accent-ink);
-  border-color: var(--color-accent-ink);
-}
-
-.btn-secondary {
-  background: var(--color-bg);
-  color: var(--color-ink);
-  border: 1px solid var(--color-line-strong);
-}
-
+.btn-primary:hover,
 .btn-secondary:hover {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
+  border-color: var(--color-ink);
 }
 
 .eyebrow {

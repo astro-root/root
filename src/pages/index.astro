@@ -3,333 +3,120 @@ export const prerender = false;
 
 import Layout from '@/layouts/Layout.astro';
 import Opening from '@/components/Opening.astro';
-import ProjectEntry from '@/components/ProjectEntry.astro';
-import NoteRow from '@/components/NoteRow.astro';
 import CosmicField from '@/components/CosmicField.astro';
-import { getProjects, getPosts, getAbout, getSettings } from '@/lib/content';
+import { getSettings } from '@/lib/content';
 
-const allProjects = await getProjects();
-const featured = allProjects.filter((p) => p.featured).slice(0, 3);
-
-const notes = (await getPosts()).slice(0, 3);
-const about = await getAbout();
 const settings = await getSettings();
 
-const activity = [
-  {
-    label: 'Observe',
-    coord: 'RA 04h 35m',
-    text: '望遠鏡越しの一夜と、そこで生まれた疑問を記録する。'
-  },
-  {
-    label: 'Think',
-    coord: 'DEC +16° 30′',
-    text: '疑問を数式やシミュレーションに落として、自分の手で確かめ直す。'
-  },
-  {
-    label: 'Build',
-    coord: 'T+00:00:00',
-    text: 'クイズ運営のためのツールから、実験的な小さなソフトウェアまで。'
-  }
+const interests = ['Astronomy', 'Physics', 'Software', 'Quiz'];
+
+const links = [
+  { n: '01', href: '/projects', label: 'Projects' },
+  { n: '02', href: '/blog', label: 'Notes' },
+  { n: '03', href: '/about', label: 'About' },
+  { n: '04', href: '/contact', label: 'Contact' }
 ];
 ---
 
-<Layout
-  title="Root's Laboratory"
-  description={settings.siteDescription}
->
+<Layout title="Root's Laboratory" description={settings.siteDescription}>
   <Opening />
 
   <section class="hero">
     <CosmicField variant="quiet" />
     <div class="wrap hero__inner">
-      <p class="hero__eyebrow eyebrow">Root's Laboratory</p>
-      <h1 class="hero__title">
-        天文・物理・ソフトウェアを<br />横断する、個人のラボ
-      </h1>
-      <p class="hero__lede">{settings.heroLede}</p>
-      <div class="hero__actions">
-        <a class="btn-primary" href="/projects">Projectsを見る</a>
-        <a class="btn-secondary" href="/about">Aboutを読む</a>
-      </div>
-      <p class="hero__tagline">{settings.heroTagline}</p>
+      <h1 class="hero__word">Root</h1>
+      <p class="hero__interests">{interests.join(' / ')}</p>
+
+      <ul class="hero__links">
+        {
+          links.map((l) => (
+            <li>
+              <a href={l.href}>
+                <span class="hero__links-n">{l.n}</span>
+                <span class="hero__links-label">{l.label}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
     </div>
-  </section>
-
-  <section class="statement wrap">
-    <p class="statement__eyebrow eyebrow">Introduction</p>
-    <p class="statement__lead">
-      A place where I explore, build, and experiment —
-      <span>観測して、確かめて、作ってみる。うまくいかないことも含めて、その過程を残す場所。</span>
-    </p>
-  </section>
-
-  <section class="activity wrap" aria-labelledby="activity-heading">
-    <div class="section-head">
-      <p class="eyebrow">What this place is for</p>
-      <h2 id="activity-heading">Observe. Think. Build.</h2>
-    </div>
-    <div class="activity__grid">
-      {
-        activity.map((a, i) => (
-          <div class="activity__item">
-            <p class="activity__coord">{a.coord}</p>
-            <p class="activity__index">{String(i + 1).padStart(2, '0')}</p>
-            <h3 class="activity__label">{a.label}</h3>
-            <p class="activity__text">{a.text}</p>
-          </div>
-        ))
-      }
-    </div>
-  </section>
-
-  <section class="featured wrap" aria-labelledby="featured-heading">
-    <div class="section-head">
-      <p class="eyebrow">Selected work</p>
-      <h2 id="featured-heading">Featured Projects</h2>
-    </div>
-
-    <div class="featured__list">
-      {featured.map((project) => <ProjectEntry project={project} variant="compact" />)}
-    </div>
-
-    <a class="section-link" href="/projects">View all projects →</a>
-  </section>
-
-  <section class="notes wrap" aria-labelledby="notes-heading">
-    <div class="section-head">
-      <p class="eyebrow">Laboratory Notes</p>
-      <h2 id="notes-heading">Latest Notes</h2>
-    </div>
-
-    <div class="notes__list">
-      {notes.map((post) => <NoteRow post={post} />)}
-    </div>
-
-    <a class="section-link" href="/blog">Read the notes →</a>
-  </section>
-
-  <section class="about-teaser wrap" aria-labelledby="about-heading">
-    <div class="section-head">
-      <p class="eyebrow">About</p>
-      <h2 id="about-heading">Who's behind this</h2>
-    </div>
-    <div class="about-teaser__content prose" set:html={about.bodyHtml} />
-    <a class="section-link" href="/about">More about Root →</a>
-  </section>
-
-  <section class="contact-teaser wrap">
-    <p class="contact-teaser__text">
-      プロジェクトのご相談・お問い合わせは
-      <a href="/contact">こちら</a>
-      から。
-    </p>
   </section>
 </Layout>
 
 <style>
   .hero {
     position: relative;
-    padding-top: clamp(7rem, 14vw, 9rem);
-    padding-bottom: clamp(4rem, 8vw, 6rem);
+    min-height: calc(100svh - 4rem);
+    display: flex;
+    align-items: center;
     overflow: hidden;
   }
 
   .hero__inner {
     position: relative;
     z-index: 1;
-    max-width: 46rem;
   }
 
-  .hero__eyebrow {
-    margin-bottom: 1rem;
-    color: var(--color-accent);
-  }
-
-  .hero__title {
-    font-size: clamp(2.2rem, 5.5vw, var(--fs-7));
-    font-weight: 700;
+  .hero__word {
+    font-size: clamp(3rem, 10vw, 5.5rem);
+    font-weight: 600;
     letter-spacing: -0.02em;
-    line-height: var(--lh-tight);
   }
 
-  .hero__lede {
-    margin-top: 1.25rem;
-    max-width: 52ch;
-    color: var(--color-ink-soft);
-    font-size: var(--fs-1);
-  }
-
-  .hero__actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.9rem;
-    margin-top: 2rem;
-  }
-
-  .hero__tagline {
-    margin-top: 1.75rem;
+  .hero__interests {
+    margin-top: 0.85rem;
     font-family: var(--font-mono);
-    font-size: var(--fs-000);
+    font-size: var(--fs-00);
     color: var(--color-muted);
-    letter-spacing: 0.03em;
   }
 
-  /* ---- Statement --------------------------------------------------- */
-  .statement {
-    padding-block: var(--section-space);
-    border-top: 1px solid var(--color-line);
-  }
-
-  .statement__eyebrow {
-    margin-bottom: 2rem;
-  }
-
-  .statement__lead {
-    font-size: clamp(1.6rem, 4.2vw, 3rem);
-    line-height: 1.4;
-    max-width: 26ch;
-    letter-spacing: -0.01em;
-  }
-
-  .statement__lead span {
-    color: var(--color-ink-soft);
-  }
-
-  /* ---- Shared section head ------------------------------------------ */
-  .section-head {
+  .hero__links {
+    margin-top: clamp(3rem, 8vw, 5rem);
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
-    margin-bottom: clamp(2.5rem, 6vw, 4.5rem);
   }
 
-  .section-head h2 {
-    font-size: clamp(1.9rem, 4.4vw, 3rem);
-  }
-
-  .section-link {
-    display: inline-block;
-    margin-top: clamp(2rem, 4vw, 3.5rem);
-    font-family: var(--font-mono);
-    font-size: var(--fs-00);
-    text-decoration: none;
-    border-bottom: 1px solid var(--color-line-strong);
-    padding-bottom: 2px;
-    transition: border-color var(--dur-fast) var(--ease-lab), color var(--dur-fast);
-  }
-
-  .section-link:hover {
-    color: var(--color-accent);
-    border-color: var(--color-accent);
-  }
-
-  .featured,
-  .notes,
-  .about-teaser {
-    padding-block: var(--section-space);
+  .hero__links li {
     border-top: 1px solid var(--color-line);
   }
 
-  .featured__list {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  .hero__links li:last-child {
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .hero__links a {
+    display: flex;
+    align-items: baseline;
     gap: 1.25rem;
+    padding-block: 1rem;
+    text-decoration: none;
+    width: fit-content;
   }
 
-  /* ---- Observe / Think / Build --------------------------------------- */
-  .activity {
-    padding-block: var(--section-space);
-    border-top: 1px solid var(--color-line);
-  }
-
-  .activity__grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: clamp(2rem, 5vw, 4rem);
-  }
-
-  .activity__item {
-    position: relative;
-    padding-top: 1.5rem;
-    border-top: 1px solid var(--color-line-strong);
-  }
-
-  .activity__coord {
-    position: absolute;
-    top: -1.6rem;
-    right: 0;
+  .hero__links-n {
     font-family: var(--font-mono);
     font-size: var(--fs-000);
     color: var(--color-muted);
   }
 
-  .activity__index {
-    font-family: var(--font-mono);
-    font-size: var(--fs-000);
-    color: var(--color-accent);
-    margin-bottom: 1rem;
+  .hero__links-label {
+    font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+    position: relative;
   }
 
-  .activity__label {
-    font-size: clamp(1.5rem, 3vw, 2rem);
+  .hero__links-label::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 100%;
+    bottom: -2px;
+    height: 1px;
+    background: var(--color-ink);
+    transition: right var(--dur-med) var(--ease-lab);
   }
 
-  .activity__text {
-    margin-top: 0.75rem;
-    color: var(--color-ink-soft);
-    max-width: 32ch;
-    font-size: var(--fs-00);
-  }
-
-  @media (max-width: 860px) {
-    .activity__grid {
-      grid-template-columns: 1fr;
-      gap: 2.5rem;
-    }
-
-    .activity__coord {
-      position: static;
-      display: block;
-      margin-bottom: 0.5rem;
-    }
-  }
-
-  /* ---- About teaser --------------------------------------------------- */
-  .about-teaser__content {
-    max-width: var(--measure);
-  }
-
-  .about-teaser__content :global(h2),
-  .about-teaser__content :global(h3) {
-    display: none;
-  }
-
-  .about-teaser__content :global(p) {
-    margin-top: 1rem;
-  }
-
-  .about-teaser__content :global(p:first-of-type) {
-    margin-top: 0;
-    font-size: var(--fs-1);
-  }
-
-  .about-teaser__content :global(p:nth-of-type(n + 3)) {
-    display: none;
-  }
-
-  /* ---- Contact teaser --------------------------------------------------- */
-  .contact-teaser {
-    padding-block: clamp(4rem, 9vw, 7rem);
-    border-top: 1px solid var(--color-line);
-  }
-
-  .contact-teaser__text {
-    font-size: clamp(1.1rem, 2.4vw, 1.4rem);
-  }
-
-  .contact-teaser__text a {
-    text-decoration: underline;
-    text-decoration-color: var(--color-accent);
+  .hero__links a:hover .hero__links-label::after,
+  .hero__links a:focus-visible .hero__links-label::after {
+    right: 0;
   }
 </style>

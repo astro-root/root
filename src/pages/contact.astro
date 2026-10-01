@@ -2,7 +2,6 @@
 export const prerender = false;
 
 import Layout from '@/layouts/Layout.astro';
-import CosmicField from '@/components/CosmicField.astro';
 import { getSettings } from '@/lib/content';
 
 const settings = await getSettings();
@@ -18,19 +17,9 @@ const links = [
 ];
 ---
 
-<Layout
-  title="Contact"
-  description="Root's Laboratory への連絡先。プロジェクトのご相談やご質問はメールでお願いします。"
->
-  <section class="page-head">
-    <CosmicField variant="quiet" />
-    <div class="wrap page-head__inner">
-      <p class="eyebrow">Contact</p>
-      <h1>Let's talk</h1>
-      <p class="page-head__lede">
-        プロジェクトのご相談、ご質問、その他のご連絡はメールでお願いします。できるだけ早く返信します。
-      </p>
-    </div>
+<Layout title="Contact" description="連絡先。">
+  <section class="wrap page-head">
+    <h1>Contact</h1>
   </section>
 
   <section class="links wrap">
@@ -55,31 +44,16 @@ const links = [
 
 <style>
   .page-head {
-    position: relative;
-    overflow: hidden;
-    padding-top: clamp(7rem, 16vw, 11rem);
-    padding-bottom: clamp(3rem, 7vw, 5rem);
-  }
-
-  .page-head__inner {
-    position: relative;
-    z-index: 1;
+    padding-top: clamp(5rem, 10vw, 7rem);
+    padding-bottom: clamp(1.5rem, 4vw, 2.5rem);
   }
 
   .page-head h1 {
-    font-size: clamp(3.2rem, 13vw, 7rem);
-    margin-top: 1rem;
-  }
-
-  .page-head__lede {
-    margin-top: 1.5rem;
-    max-width: 48ch;
-    color: var(--color-ink-soft);
-    font-size: var(--fs-1);
+    font-size: clamp(2rem, 5vw, 2.75rem);
+    font-weight: 600;
   }
 
   .links {
-    padding-top: clamp(1rem, 3vw, 2rem);
     padding-bottom: var(--section-space);
     border-top: 1px solid var(--color-line);
   }
@@ -98,18 +72,16 @@ const links = [
     flex-wrap: wrap;
     align-items: baseline;
     gap: 0.5rem 1.5rem;
-    padding-block: clamp(1.5rem, 4vw, 2.5rem);
+    padding-block: clamp(1.25rem, 3vw, 1.75rem);
     text-decoration: none;
   }
 
   .links__value {
-    font-size: clamp(1.5rem, 5vw, 2.75rem);
+    font-size: clamp(1.1rem, 3vw, 1.5rem);
     letter-spacing: -0.01em;
-    transition: color var(--dur-fast) var(--ease-lab);
   }
 
-  .links a:hover .links__value,
-  .links a:focus-visible .links__value {
-    color: var(--color-accent);
+  .links a:hover .links__value {
+    text-decoration: underline;
   }
 </style>
