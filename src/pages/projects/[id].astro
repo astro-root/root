@@ -16,6 +16,7 @@ const { title, summary, category, status, year, technology, url, github } = proj
 
 <Layout title={title} description={summary}>
   <article class="wrap post">
+   <div class="post__inner">
     <a class="post__back" href="/projects">← Projects</a>
 
     <h1 class="post__title">{title}</h1>
@@ -60,6 +61,7 @@ const { title, summary, category, status, year, technology, url, github } = proj
         </p>
       )
     }
+   </div>
   </article>
 </Layout>
 
@@ -67,6 +69,9 @@ const { title, summary, category, status, year, technology, url, github } = proj
   .post {
     padding-top: clamp(5rem, 10vw, 7rem);
     padding-bottom: var(--section-space);
+  }
+
+  .post__inner {
     max-width: 42rem;
   }
 
@@ -127,6 +132,7 @@ const { title, summary, category, status, year, technology, url, github } = proj
   }
 
   .post__links a:hover {
-    text-decoration-color: var(--color-ink);
+    color: var(--color-accent);
+    text-decoration-color: var(--color-accent);
   }
 </style>

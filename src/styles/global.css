@@ -12,9 +12,9 @@
   --color-muted: #8a8d94;
   --color-line: #e9e9ea;
   --color-line-strong: #d6d6d8;
-  --color-accent: #33384a; /* near-ink, just enough to read as "selected" */
-  --color-accent-soft: #f2f2f4;
-  --color-accent-ink: #111214;
+  --color-accent: #3d4b73; /* a quiet slate blue — the one touch of color */
+  --color-accent-soft: #f1f3f8;
+  --color-accent-ink: #2c3858;
   --shadow-card: none;
 
   /* Type — Inter for reading, Plex Mono only for numbers/dates */
@@ -64,9 +64,9 @@
     --color-muted: #82858c;
     --color-line: #24262c;
     --color-line-strong: #34363d;
-    --color-accent: #c7c8cd;
-    --color-accent-soft: #1c1d21;
-    --color-accent-ink: #f1f1ee;
+    --color-accent: #8fa0d6;
+    --color-accent-soft: #1a2030;
+    --color-accent-ink: #c2cdf0;
     --shadow-card: none;
     color-scheme: dark;
   }
@@ -81,9 +81,9 @@
   --color-muted: #82858c;
   --color-line: #24262c;
   --color-line-strong: #34363d;
-  --color-accent: #c7c8cd;
-  --color-accent-soft: #1c1d21;
-  --color-accent-ink: #f1f1ee;
+  --color-accent: #8fa0d6;
+  --color-accent-soft: #1a2030;
+  --color-accent-ink: #c2cdf0;
   --shadow-card: none;
   color-scheme: dark;
 }
