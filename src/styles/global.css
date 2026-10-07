@@ -15,7 +15,7 @@
   --color-accent: #3d4b73; /* a quiet slate blue — the one touch of color */
   --color-accent-soft: #f1f3f8;
   --color-accent-ink: #2c3858;
-  --shadow-card: none;
+  --shadow-card: 0 1px 2px rgba(17, 18, 20, 0.04), 0 10px 28px -14px rgba(17, 18, 20, 0.16);
 
   /* Type — Inter for reading, Plex Mono only for numbers/dates */
   --font-sans: 'Inter', 'Noto Sans JP', -apple-system, sans-serif;
@@ -41,9 +41,9 @@
   --gutter: clamp(1.25rem, 5vw, 4rem);
   --content-max: 1100px;
   --section-space: clamp(4rem, 9vw, 7rem);
-  --radius: 2px;
-  --radius-sm: 2px;
-  --radius-pill: 2px;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --radius-pill: 999px;
 
   /* Motion */
   --ease-lab: cubic-bezier(0.22, 0.61, 0.24, 1);
@@ -67,7 +67,7 @@
     --color-accent: #8fa0d6;
     --color-accent-soft: #1a2030;
     --color-accent-ink: #c2cdf0;
-    --shadow-card: none;
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 28px -14px rgba(0, 0, 0, 0.6);
     color-scheme: dark;
   }
 }
@@ -84,7 +84,7 @@
   --color-accent: #8fa0d6;
   --color-accent-soft: #1a2030;
   --color-accent-ink: #c2cdf0;
-  --shadow-card: none;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 28px -14px rgba(0, 0, 0, 0.6);
   color-scheme: dark;
 }
 
@@ -218,6 +218,86 @@ button {
 .btn-primary:hover,
 .btn-secondary:hover {
   border-color: var(--color-ink);
+}
+
+/* ---- Status badges, shared by the Projects grid and detail page ---- */
+.badge {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: var(--fs-000);
+  padding: 0.2rem 0.65rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-line-strong);
+  color: var(--color-ink-soft);
+}
+
+.status-active {
+  background: var(--color-accent-soft);
+  color: var(--color-accent-ink);
+  border-color: transparent;
+}
+
+.status-dev {
+  background: #fdf3e2;
+  color: #8a5a10;
+  border-color: transparent;
+}
+
+:root[data-theme='dark'] .status-dev {
+  background: #2e2410;
+  color: #e3b567;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .status-dev {
+    background: #2e2410;
+    color: #e3b567;
+  }
+}
+
+.status-concept {
+  background: transparent;
+  color: var(--color-muted);
+  border-style: dashed;
+}
+
+.status-archived {
+  background: var(--color-bg-raised);
+  color: var(--color-muted);
+  border-color: transparent;
+}
+
+/* ---- Pill buttons (project detail, etc.) ---- */
+.btn-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: var(--fs-00);
+  font-weight: 500;
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--radius-pill);
+  text-decoration: none;
+  border: 1px solid var(--color-line-strong);
+  color: var(--color-ink);
+  transition: border-color var(--dur-fast) var(--ease-lab), background var(--dur-fast) var(--ease-lab),
+    color var(--dur-fast) var(--ease-lab);
+}
+
+.btn-pill:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.btn-pill--primary {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #ffffff;
+}
+
+.btn-pill--primary:hover {
+  background: var(--color-accent-ink);
+  border-color: var(--color-accent-ink);
+  color: #ffffff;
 }
 
 .eyebrow {

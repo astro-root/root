@@ -2,7 +2,7 @@
 
 Root's Laboratory の個人サイト。Astro（SSR / Cloudflare Pages）+ Firebase（Auth + Firestore）構成。
 
-デザインはミニマル・タイポグラフィ中心（Inter + IBM Plex Mono、ほぼ白黒、カード/バッジなし）。Home は「Root」と4つの導線だけ。Projectsは年ごとのタイポグラフィ一覧＋詳細ページ（`/projects/[id]`）、Notesは日付+タイトルのログ形式。ナビゲーション右上のアイコンでライト/ダークを切り替えられます（選択は localStorage に保存）。
+デザインはモダン・カードベース（Inter + IBM Plex Mono、角丸カード、ステータスの色分けバッジ）。quiznavi.astro-root.com / nopo1.com を参考に、Home は4枚のダッシュボード風カード、Projectsはステータスバッジ付きのカードグリッド、Notesは1枚のパネル内のログリスト。ナビゲーション右上のアイコンでライト/ダークを切り替えられます（選択は localStorage に保存）。
 
 - 公開サイトは Firestore からリクエスト時にデータを読む（Adminで保存 → 即座にサイトに反映）
 - Firebase未設定でも壊れない：`src/content/` のMarkdownに自動フォールバックする

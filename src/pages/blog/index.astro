@@ -13,14 +13,16 @@ const posts = await getPosts();
     <h1>Notes</h1>
   </section>
 
-  <section class="list wrap">
-    {
-      posts.length > 0 ? (
-        posts.map((post) => <NoteRow post={post} />)
-      ) : (
-        <p class="list__empty">まだ記事がありません。</p>
-      )
-    }
+  <section class="list-panel wrap">
+    <div class="list">
+      {
+        posts.length > 0 ? (
+          posts.map((post) => <NoteRow post={post} />)
+        ) : (
+          <p class="list__empty">まだ記事がありません。</p>
+        )
+      }
+    </div>
   </section>
 </Layout>
 
@@ -35,17 +37,25 @@ const posts = await getPosts();
     font-weight: 600;
   }
 
-  .list {
+  .list-panel {
     padding-bottom: var(--section-space);
   }
 
-  .list :global(.note:last-child) {
-    border-bottom: 1px solid var(--color-line);
+  .list {
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius);
+    padding: 0.5rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+
+  .list :global(.note) {
+    border-radius: var(--radius-sm);
   }
 
   .list__empty {
-    padding-block: 3rem;
-    border-top: 1px solid var(--color-line);
+    padding: 2rem 0;
     color: var(--color-muted);
   }
 </style>

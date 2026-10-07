@@ -28,6 +28,7 @@ const links = [
         links.map((l) => (
           <li>
             <a
+              class="links__row"
               href={l.href}
               target={l.href.startsWith('http') ? '_blank' : undefined}
               rel={l.href.startsWith('http') ? 'noreferrer' : undefined}
@@ -55,25 +56,32 @@ const links = [
 
   .links {
     padding-bottom: var(--section-space);
-    border-top: 1px solid var(--color-line);
   }
 
   .links ul {
     display: flex;
     flex-direction: column;
+    gap: 0.6rem;
   }
 
-  .links li {
-    border-bottom: 1px solid var(--color-line);
-  }
-
-  .links a {
+  .links__row {
     display: flex;
     flex-wrap: wrap;
-    align-items: baseline;
+    align-items: center;
     gap: 0.5rem 1.5rem;
-    padding-block: clamp(1.25rem, 3vw, 1.75rem);
+    padding: clamp(1.1rem, 3vw, 1.5rem);
     text-decoration: none;
+    background: var(--color-bg-panel);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
+    transition: border-color var(--dur-fast) var(--ease-lab), transform var(--dur-fast) var(--ease-lab);
+  }
+
+  .links__row:hover,
+  .links__row:focus-visible {
+    border-color: var(--color-line-strong);
+    transform: translateY(-2px);
   }
 
   .links__value {
@@ -81,9 +89,7 @@ const links = [
     letter-spacing: -0.01em;
   }
 
-  .links a:hover .links__value {
+  .links__row:hover .links__value {
     color: var(--color-accent);
-    text-decoration: underline;
-    text-decoration-color: var(--color-accent);
   }
 </style>

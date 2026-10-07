@@ -6,19 +6,6 @@ import ProjectEntry from '@/components/ProjectEntry.astro';
 import { getProjects } from '@/lib/content';
 
 const projects = await getProjects();
-
-function yearOf(y: string): string {
-  const m = y.match(/\d{4}/);
-  return m ? m[0] : y;
-}
-
-const groups = new Map<string, typeof projects>();
-for (const p of projects) {
-  const y = yearOf(p.year);
-  if (!groups.has(y)) groups.set(y, []);
-  groups.get(y)!.push(p);
-}
-const sortedYears = [...groups.keys()].sort((a, b) => b.localeCompare(a));
 ---
 
 <Layout
@@ -27,19 +14,13 @@ const sortedYears = [...groups.keys()].sort((a, b) => b.localeCompare(a));
 >
   <section class="wrap page-head">
     <h1>Projects</h1>
+    <p class="page-head__lede">完成しているものも、まだ途中のものも並んでいます。</p>
   </section>
 
   <section class="wrap catalog">
-    {
-      sortedYears.map((year) => (
-        <div class="year-group">
-          <p class="year-group__label">{year}</p>
-          <div class="year-group__list">
-            {groups.get(year)!.map((project) => <ProjectEntry project={project} />)}
-          </div>
-        </div>
-      ))
-    }
+    <div class="project-grid">
+      {projects.map((project) => <ProjectEntry project={project} />)}
+    </div>
   </section>
 </Layout>
 
@@ -54,22 +35,18 @@ const sortedYears = [...groups.keys()].sort((a, b) => b.localeCompare(a));
     font-weight: 600;
   }
 
+  .page-head__lede {
+    margin-top: 0.75rem;
+    color: var(--color-ink-soft);
+  }
+
   .catalog {
     padding-bottom: var(--section-space);
   }
 
-  .year-group {
-    margin-top: clamp(2rem, 5vw, 3rem);
-  }
-
-  .year-group__label {
-    font-family: var(--font-mono);
-    font-size: var(--fs-00);
-    color: var(--color-muted);
-    margin-bottom: 0.5rem;
-  }
-
-  .year-group__list :global(.row:last-child) {
-    border-bottom: 1px solid var(--color-line);
+  .project-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.25rem;
   }
 </style>

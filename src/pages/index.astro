@@ -11,10 +11,10 @@ const settings = await getSettings();
 const interests = ['Astronomy', 'Physics', 'Software', 'Quiz'];
 
 const links = [
-  { n: '01', href: '/projects', label: 'Projects' },
-  { n: '02', href: '/blog', label: 'Notes' },
-  { n: '03', href: '/about', label: 'About' },
-  { n: '04', href: '/contact', label: 'Contact' }
+  { n: '01', href: '/projects', label: 'Projects', note: '作っているもの' },
+  { n: '02', href: '/blog', label: 'Notes', note: '観測・考察の記録' },
+  { n: '03', href: '/about', label: 'About', note: 'Rootについて' },
+  { n: '04', href: '/contact', label: 'Contact', note: '連絡先' }
 ];
 ---
 
@@ -31,9 +31,10 @@ const links = [
         {
           links.map((l) => (
             <li>
-              <a href={l.href}>
-                <span class="hero__links-n">{l.n}</span>
-                <span class="hero__links-label">{l.label}</span>
+              <a href={l.href} class="hero__card">
+                <span class="hero__card-n">{l.n}</span>
+                <span class="hero__card-label">{l.label}</span>
+                <span class="hero__card-note">{l.note}</span>
               </a>
             </li>
           ))
@@ -72,52 +73,53 @@ const links = [
   }
 
   .hero__links {
-    margin-top: clamp(3rem, 8vw, 5rem);
+    margin-top: clamp(2.5rem, 6vw, 4rem);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 16rem));
+    gap: 1rem;
+  }
+
+  .hero__card {
     display: flex;
     flex-direction: column;
-  }
-
-  .hero__links li {
-    border-top: 1px solid var(--color-line);
-  }
-
-  .hero__links li:last-child {
-    border-bottom: 1px solid var(--color-line);
-  }
-
-  .hero__links a {
-    display: flex;
-    align-items: baseline;
-    gap: 1.25rem;
-    padding-block: 1rem;
+    background: var(--color-bg-panel);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
+    padding: 1.25rem 1.4rem;
     text-decoration: none;
-    width: fit-content;
+    transition: transform var(--dur-fast) var(--ease-lab), border-color var(--dur-fast) var(--ease-lab),
+      box-shadow var(--dur-fast) var(--ease-lab);
   }
 
-  .hero__links-n {
+  .hero__card:hover,
+  .hero__card:focus-visible {
+    transform: translateY(-2px);
+    border-color: var(--color-line-strong);
+    box-shadow: 0 1px 2px rgba(17, 18, 20, 0.04), 0 16px 32px -14px rgba(17, 18, 20, 0.22);
+  }
+
+  .hero__card-n {
     font-family: var(--font-mono);
     font-size: var(--fs-000);
     color: var(--color-accent);
   }
 
-  .hero__links-label {
-    font-size: clamp(1.1rem, 2.5vw, 1.4rem);
-    position: relative;
+  .hero__card-label {
+    margin-top: 0.6rem;
+    font-size: 1.25rem;
+    font-weight: 600;
   }
 
-  .hero__links-label::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 100%;
-    bottom: -2px;
-    height: 1px;
-    background: var(--color-ink);
-    transition: right var(--dur-med) var(--ease-lab);
+  .hero__card-note {
+    margin-top: 0.3rem;
+    font-size: var(--fs-000);
+    color: var(--color-muted);
   }
 
-  .hero__links a:hover .hero__links-label::after,
-  .hero__links a:focus-visible .hero__links-label::after {
-    right: 0;
+  @media (max-width: 520px) {
+    .hero__links {
+      grid-template-columns: 1fr;
+    }
   }
 </style>

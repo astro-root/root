@@ -12,6 +12,15 @@ if (!project) {
 }
 
 const { title, summary, category, status, year, technology, url, github } = project;
+
+const statusClass =
+  status === 'Active'
+    ? 'status-active'
+    : status === 'In Development'
+      ? 'status-dev'
+      : status === 'Concept'
+        ? 'status-concept'
+        : 'status-archived';
 ---
 
 <Layout title={title} description={summary}>
@@ -19,18 +28,15 @@ const { title, summary, category, status, year, technology, url, github } = proj
    <div class="post__inner">
     <a class="post__back" href="/projects">← Projects</a>
 
+    <div class="post__top">
+      <span class={`badge ${statusClass}`}>{status}</span>
+      <span class="post__year">{year}</span>
+    </div>
+
     <h1 class="post__title">{title}</h1>
     <p class="post__summary">{summary}</p>
 
     <dl class="post__meta">
-      <div>
-        <dt>Year</dt>
-        <dd>{year}</dd>
-      </div>
-      <div>
-        <dt>Status</dt>
-        <dd>{status}</dd>
-      </div>
       <div>
         <dt>Category</dt>
         <dd>{category}</dd>
@@ -49,12 +55,12 @@ const { title, summary, category, status, year, technology, url, github } = proj
       (url || github) && (
         <p class="post__links">
           {url && (
-            <a href={url} target="_blank" rel="noreferrer">
+            <a class="btn-pill btn-pill--primary" href={url} target="_blank" rel="noreferrer">
               Live ↗
             </a>
           )}
           {github && (
-            <a href={github} target="_blank" rel="noreferrer">
+            <a class="btn-pill" href={github} target="_blank" rel="noreferrer">
               GitHub ↗
             </a>
           )}
@@ -86,8 +92,21 @@ const { title, summary, category, status, year, technology, url, github } = proj
     color: var(--color-ink);
   }
 
-  .post__title {
+  .post__top {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
     margin-top: 1.5rem;
+  }
+
+  .post__year {
+    font-family: var(--font-mono);
+    font-size: var(--fs-000);
+    color: var(--color-muted);
+  }
+
+  .post__title {
+    margin-top: 0.75rem;
     font-size: clamp(2rem, 5vw, 3rem);
     font-weight: 600;
   }
@@ -122,17 +141,6 @@ const { title, summary, category, status, year, technology, url, github } = proj
   .post__links {
     margin-top: 2rem;
     display: flex;
-    gap: 1.5rem;
-  }
-
-  .post__links a {
-    font-size: var(--fs-00);
-    text-decoration: underline;
-    text-decoration-color: var(--color-line-strong);
-  }
-
-  .post__links a:hover {
-    color: var(--color-accent);
-    text-decoration-color: var(--color-accent);
+    gap: 0.75rem;
   }
 </style>

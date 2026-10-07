@@ -32,7 +32,12 @@ const links = [
       {
         links.map((l) => (
           <li>
-            <a href={l.href} target={l.href.startsWith('http') ? '_blank' : undefined} rel="noreferrer">
+            <a
+              class="btn-pill"
+              href={l.href}
+              target={l.href.startsWith('http') ? '_blank' : undefined}
+              rel="noreferrer"
+            >
               {l.label}
             </a>
           </li>
@@ -85,20 +90,10 @@ const links = [
   }
 
   .about__links {
-    margin-top: 1rem;
+    margin-top: 1.25rem;
     display: flex;
-    gap: 1.25rem;
-  }
-
-  .about__links a {
-    font-size: var(--fs-00);
-    text-decoration: underline;
-    text-decoration-color: var(--color-line-strong);
-  }
-
-  .about__links a:hover {
-    color: var(--color-accent);
-    text-decoration-color: var(--color-accent);
+    flex-wrap: wrap;
+    gap: 0.6rem;
   }
 
   .about__notes {

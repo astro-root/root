@@ -1,5 +1,7 @@
 ---
-// A single log line: date + title. No excerpt, no card — just a record.
+// A log line: date + title + category. Rounded hover state instead of a
+// full bordered card — keeps a long list readable while still feeling
+// like part of the same "modern" interaction language as the cards.
 import type { Post } from '@/lib/content';
 
 interface Props {
@@ -17,18 +19,24 @@ const formatted = new Date(date)
 <a class="note" href={`/blog/${slug}/`}>
   <span class="note__date">{formatted}</span>
   <span class="note__title">{title}</span>
-  <span class="note__category">{category}</span>
+  <span class="badge note__badge">{category}</span>
 </a>
 
 <style>
   .note {
     display: flex;
     flex-wrap: wrap;
-    align-items: baseline;
+    align-items: center;
     gap: 0.4rem 1.25rem;
-    padding-block: 0.9rem;
-    border-top: 1px solid var(--color-line);
+    padding: 0.85rem 0.75rem;
+    border-radius: var(--radius-sm);
     text-decoration: none;
+    transition: background var(--dur-fast) var(--ease-lab);
+  }
+
+  .note:hover,
+  .note:focus-visible {
+    background: var(--color-bg-raised);
   }
 
   .note__date {
@@ -41,39 +49,21 @@ const formatted = new Date(date)
 
   .note__title {
     font-size: var(--fs-1);
-    position: relative;
+    font-weight: 500;
   }
 
-  .note__title::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 100%;
-    bottom: -1px;
-    height: 1px;
-    background: var(--color-ink);
-    transition: right var(--dur-med) var(--ease-lab);
-  }
-
-  .note:hover .note__title::after,
-  .note:focus-visible .note__title::after {
-    right: 0;
-  }
-
-  .note__category {
+  .note__badge {
     margin-left: auto;
-    font-family: var(--font-mono);
-    font-size: var(--fs-000);
-    color: var(--color-muted);
   }
 
   @media (max-width: 560px) {
     .note {
       flex-direction: column;
-      gap: 0.25rem;
+      align-items: flex-start;
+      gap: 0.3rem;
     }
 
-    .note__category {
+    .note__badge {
       margin-left: 0;
     }
   }
