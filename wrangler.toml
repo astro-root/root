@@ -7,5 +7,5 @@ pages_build_output_dir = "./dist"
 binding = "DB"
 database_name = "roots-laboratory"
 # ↓ `wrangler d1 create roots-laboratory` で表示される database_id に置き換える（README参照）
-database_id = "00000000-0000-0000-0000-000000000000"
+database_id = "e64fd630-7c44-4d71-8c52-dfc50618ac2a"
 migrations_dir = "migrations"
