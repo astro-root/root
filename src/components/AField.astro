@@ -1,0 +1,37 @@
+---
+export interface Props {
+  name: string; label: string; value?: string | number | boolean | null; type?: string; hint?: string; required?: boolean;
+  maxlength?: number; as?: 'input' | 'textarea' | 'select'; rows?: number; options?: { value: string; label: string }[];
+  placeholder?: string; id?: string; min?: number; max?: number; upload?: boolean; md?: boolean; autocomplete?: string; readonly?: boolean;
+}
+const { name, label, value = '', type: rawType = 'text', hint, required, maxlength, as = 'input', rows = 4, options = [], placeholder, min, max, upload, md, autocomplete, readonly } = Astro.props;
+const type = rawType as astroHTML.JSX.HTMLInputTypeAttribute;
+const id = Astro.props.id ?? `f-${name.replace(/\./g, '-')}`;
+const v = value === null || value === undefined ? '' : String(value);
+---
+{type === 'checkbox' ? (
+  <div class="field">
+    <label class="check"><input type="checkbox" id={id} name={name} checked={value === true || value === 'true' || value === 1} aria-describedby={hint ? `${id}-h` : undefined} /><span>{label}{hint && <small class="hint" id={`${id}-h`} style="display:block">{hint}</small>}</span></label>
+    <p class="field-error"></p>
+  </div>
+) : (
+  <div class="field">
+    <label for={id}>{label}{required && <span class="req" aria-hidden="true">*</span>}</label>
+    {as === 'textarea' ? (
+      <textarea class="textarea" id={id} name={name} rows={rows} maxlength={maxlength} placeholder={placeholder} required={required} data-md={md ? '' : undefined} aria-describedby={hint ? `${id}-h` : undefined} readonly={readonly}>{v}</textarea>
+    ) : as === 'select' ? (
+      <select class="select" id={id} name={name} required={required} aria-describedby={hint ? `${id}-h` : undefined}>
+        {options.map((o) => <option value={o.value} selected={o.value === v}>{o.label}</option>)}
+      </select>
+    ) : upload ? (
+      <div style="display:flex;gap:0.5rem">
+        <input class="input" id={id} name={name} type={type} value={v} maxlength={maxlength} placeholder={placeholder} required={required} aria-describedby={hint ? `${id}-h` : undefined} />
+        <button type="button" class="btn btn--sm" data-upload={`#${id}`} style="flex:none">アップロード</button>
+      </div>
+    ) : (
+      <input class="input" id={id} name={name} type={type} value={v} maxlength={maxlength} placeholder={placeholder} required={required} min={min} max={max} autocomplete={autocomplete} readonly={readonly} aria-describedby={hint ? `${id}-h` : undefined} />
+    )}
+    {hint && <p class="hint" id={`${id}-h`}>{hint}</p>}
+    <p class="field-error" aria-live="polite"></p>
+  </div>
+)}

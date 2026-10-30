@@ -1,0 +1,22 @@
+---
+export const prerender = false;
+import AdminLayout from '@/layouts/AdminLayout.astro';
+const items = (await Astro.locals.db.prepare('SELECT id, filename, mime, size, created_at FROM media ORDER BY created_at DESC LIMIT 200').all<any>()).results;
+---
+<AdminLayout title="メディア" active="media" subtitle="アップロードした画像（PNG/JPEG/GIF/WebP、1枚1.5MBまで）">
+  <Fragment slot="actions"><button type="button" class="btn btn--primary btn--sm" id="media-upload">画像をアップロード</button></Fragment>
+  {items.length === 0 ? <div class="empty">画像はまだありません。</div> : (
+    <div class="media-grid">{items.map((m) => (
+      <div class="media-item"><img src={`/media/${m.id}`} alt={m.filename} loading="lazy" width="176" height="132" />
+        <div><strong style="overflow-wrap:anywhere">{m.filename}</strong><code>/media/{m.id}</code><span class="muted">{(m.size / 1024).toFixed(0)} KB</span>
+          <div style="display:flex;gap:.4rem;padding:0"><button type="button" class="btn btn--sm" data-copy={`/media/${m.id}`}>URLをコピー</button><button type="button" class="btn btn--sm btn--danger" data-delete={`/api/admin/media?id=${m.id}`} data-confirm="この画像を削除しますか？使用中のページでは表示されなくなります。">削除</button></div></div></div>
+    ))}</div>)}
+  <script>
+    import { api } from '@/scripts/admin';
+    document.getElementById('media-upload')?.addEventListener('click', () => {
+      const i = document.createElement('input'); i.type = 'file'; i.accept = 'image/png,image/jpeg,image/gif,image/webp';
+      i.onchange = async () => { const f = i.files?.[0]; if (!f) return; const fd = new FormData(); fd.append('file', f); const r = await api('/api/admin/media', { form: fd }); if (r.ok) location.reload(); else alert(r.data?.errors?.file ?? 'アップロードに失敗しました'); };
+      i.click();
+    });
+  </script>
+</AdminLayout>

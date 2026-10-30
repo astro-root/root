@@ -1,0 +1,36 @@
+---
+export const prerender = false;
+import Layout from '@/layouts/Layout.astro';
+import { search } from '@/lib/content';
+
+const q = (Astro.url.searchParams.get('q') ?? '').trim().slice(0, 100);
+const hits = q ? await search(Astro.locals.db, q, 30) : [];
+const groups = [['project', 'Projects'], ['post', 'Blog'], ['page', 'Pages']] as const;
+---
+
+<Layout title={q ? `「${q}」の検索結果` : '検索'} description="サイト内検索" noindex>
+  <div class="shell page">
+    <header class="page-head">
+      <p class="eyebrow">Search</p>
+      <h1>サイト内検索</h1>
+      <form action="/search" method="get" role="search" style="display:flex;gap:0.6rem;max-width:36rem">
+        <label class="sr-only" for="s-q">キーワード</label>
+        <input class="input" id="s-q" type="search" name="q" value={q} maxlength="100" placeholder="キーワードを入力" />
+        <button class="btn btn--primary" type="submit">検索</button>
+      </form>
+    </header>
+    {q && <p role="status" class="muted" style="margin-bottom:1.5rem"><strong>{hits.length}</strong> 件の結果</p>}
+    {q && hits.length === 0 && <div class="empty"><p>「{q}」に一致する結果はありません。</p><p style="margin-top:.5rem">別のキーワードや、短い語でお試しください。</p></div>}
+    {groups.map(([kind, label]) => {
+      const g = hits.filter((h) => h.kind === kind);
+      return g.length > 0 && (
+        <section style="margin-bottom:2.5rem" aria-label={label}>
+          <h2 class="eyebrow" style="margin-bottom:0.75rem">{label}（{g.length}）</h2>
+          <ul class="post-list">{g.map((h) => (
+            <li><a class="post-row" href={h.href} style="grid-template-columns:1fr"><div><h3>{h.title}</h3><p>{h.snippet}</p></div></a></li>
+          ))}</ul>
+        </section>
+      );
+    })}
+  </div>
+</Layout>

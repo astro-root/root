@@ -1,61 +1,44 @@
 ---
 export const prerender = false;
-
 import Layout from '@/layouts/Layout.astro';
-import NoteRow from '@/components/NoteRow.astro';
-import { getPosts } from '@/lib/content';
+import PostRow from '@/components/PostRow.astro';
+import { listPosts } from '@/lib/content';
 
-const posts = await getPosts();
+const all = await listPosts(Astro.locals.db);
+const sp = Astro.url.searchParams;
+const category = sp.get('category') ?? '';
+const tag = sp.get('tag') ?? '';
+const cats = [...new Set(all.map((p) => p.category).filter(Boolean))];
+const tags = [...new Set(all.flatMap((p) => p.tags))];
+const posts = all.filter((p) => (!category || p.category === category) && (!tag || p.tags.includes(tag)));
+const href = (k: string, v: string) => (v ? `/blog?${k}=${encodeURIComponent(v)}` : '/blog');
 ---
 
-<Layout title="Notes" description="Rootが書きためている記録。">
-  <section class="wrap page-head">
-    <h1>Notes</h1>
-  </section>
+<Layout title="Blog" description="観測・考察・制作の記録。天文・物理・ソフトウェアについてのブログ。" jsonLd={{ '@context': 'https://schema.org', '@type': 'Blog', name: 'ブログ', url: new URL('/blog', Astro.site).toString(), inLanguage: 'ja' }}>
+  <div class="shell page">
+    <header class="page-head">
+      <p class="eyebrow">Blog</p>
+      <h1>観測・考察の記録</h1>
+      <p class="lede">調べたこと、作ったこと、まだ分かっていないこと。</p>
+    </header>
 
-  <section class="list-panel wrap">
-    <div class="list">
-      {
-        posts.length > 0 ? (
-          posts.map((post) => <NoteRow post={post} />)
-        ) : (
-          <p class="list__empty">まだ記事がありません。</p>
-        )
-      }
-    </div>
-  </section>
+    {(cats.length > 0 || tags.length > 0) && (
+      <nav aria-label="ブログの絞り込み" style="display:grid;gap:0.75rem;margin-bottom:2rem">
+        {cats.length > 0 && <ul class="taglist"><li class="eyebrow" style="align-self:center;margin-right:0.5rem">Category</li>
+          <li><a class:list={['tag', { 'tag--accent': !category }]} href={href('tag', tag)} aria-current={!category ? 'true' : undefined}>すべて</a></li>
+          {cats.map((c) => <li><a class:list={['tag', { 'tag--accent': c === category }]} href={category === c ? '/blog' : `/blog?category=${encodeURIComponent(c)}${tag ? `&tag=${encodeURIComponent(tag)}` : ''}`} aria-current={c === category ? 'true' : undefined}>{c}</a></li>)}
+        </ul>}
+        {tags.length > 0 && <ul class="taglist"><li class="eyebrow" style="align-self:center;margin-right:0.5rem">Tag</li>
+          {tags.map((t) => <li><a class:list={['tag', { 'tag--accent': t === tag }]} href={tag === t ? (category ? href('category', category) : '/blog') : `/blog?tag=${encodeURIComponent(t)}${category ? `&category=${encodeURIComponent(category)}` : ''}`} aria-current={t === tag ? 'true' : undefined}>#{t}</a></li>)}
+        </ul>}
+      </nav>
+    )}
+
+    <p class="muted" role="status" style="margin-bottom:1rem"><strong>{posts.length}</strong> 件</p>
+    {posts.length > 0 ? (
+      <ul class="post-list">{posts.map((p) => <PostRow post={p} />)}</ul>
+    ) : (
+      <div class="empty"><p>該当する記事がありません。</p><p style="margin-top:1rem"><a class="btn" href="/blog">すべての記事を見る</a></p></div>
+    )}
+  </div>
 </Layout>
-
-<style>
-  .page-head {
-    padding-top: clamp(5rem, 10vw, 7rem);
-    padding-bottom: clamp(1.5rem, 4vw, 2.5rem);
-  }
-
-  .page-head h1 {
-    font-size: clamp(2rem, 5vw, 2.75rem);
-    font-weight: 600;
-  }
-
-  .list-panel {
-    padding-bottom: var(--section-space);
-  }
-
-  .list {
-    border: 1px solid var(--color-line);
-    border-radius: var(--radius);
-    padding: 0.5rem 1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.1rem;
-  }
-
-  .list :global(.note) {
-    border-radius: var(--radius-sm);
-  }
-
-  .list__empty {
-    padding: 2rem 0;
-    color: var(--color-muted);
-  }
-</style>

@@ -1,0 +1,14 @@
+---
+import RepRow, { type FieldDef } from './RepRow.astro';
+interface Props { path: string; rows: Record<string, any>[]; fields: FieldDef[]; max?: number; sortable?: boolean; addLabel?: string; emptyText?: string; removable?: boolean }
+const { path, rows, fields, max = 20, sortable = false, addLabel = '追加', emptyText = '項目がありません。', removable = true } = Astro.props;
+const uid = `r-${path.replace(/\./g, '-')}`;
+---
+<div class="rep" data-repeater={path} data-max={max}>
+  <div data-rows>
+    {rows.map((row, i) => <RepRow fields={fields} row={row} sortable={sortable} removable={removable} uid={`${uid}-${i}`} />)}
+  </div>
+  <p class="rep-empty" hidden={rows.length > 0}>{emptyText}</p>
+  <template><RepRow fields={fields} row={{}} sortable={sortable} removable={removable} uid={`${uid}-new`} /></template>
+  {removable && <div><button type="button" class="btn btn--sm" data-add>＋ {addLabel}</button></div>}
+</div>

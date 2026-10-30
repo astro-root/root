@@ -1,0 +1,33 @@
+---
+export const prerender = false;
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import AField from '@/components/AField.astro';
+import SaveBar from '@/components/SaveBar.astro';
+import { getPage } from '@/lib/content';
+const p = (await getPage(Astro.locals.db, 'about'))!;
+const m = (p?.meta ?? {}) as Record<string, string>;
+---
+<AdminLayout title="プロフィール" active="profile" subtitle="/about に表示される内容。本文はMarkdownで編集します。">
+  <Fragment slot="actions"><a class="btn btn--sm" href="/about" target="_blank" rel="noopener">公開ページを見る ↗</a></Fragment>
+  <form data-admin-form data-endpoint="/api/admin/pages">
+    <input type="hidden" name="slug" value="about" />
+    <div class="edit-layout">
+      <div class="panel"><div class="grid">
+        <AField name="title" label="ページタイトル" value={p?.title ?? 'About'} required maxlength={100} />
+        <AField name="body_md" label="自己紹介・活動内容（Markdown）" as="textarea" md rows={14} value={p?.body_md ?? ''} />
+      </div></div>
+      <aside>
+        <div class="panel"><h2>プロフィール情報</h2><div class="grid" style="margin-top:.75rem">
+          <AField name="displayName" label="表示名" value={m.displayName} maxlength={60} />
+          <AField name="status" label="肩書き" value={m.status} maxlength={120} hint="例: Student / Developer / Quiz Player" />
+          <AField name="based" label="拠点" value={m.based} maxlength={60} />
+          <AField name="image" label="プロフィール画像" value={m.image} upload />
+          <AField name="imageAlt" label="画像の代替テキスト" value={m.imageAlt} maxlength={150} />
+          <AField name="description" label="meta description" as="textarea" rows={3} value={p?.description ?? ''} maxlength={300} />
+        </div></div>
+        <p class="hint">SNSリンクは「基本・ナビ・SEO」の SNS・外部リンク で、関心領域は「トップページ」で編集します。</p>
+      </aside>
+    </div>
+    <SaveBar />
+  </form>
+</AdminLayout>

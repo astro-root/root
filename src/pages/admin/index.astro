@@ -1,96 +1,41 @@
 ---
 export const prerender = false;
 import AdminLayout from '@/layouts/AdminLayout.astro';
+const db = Astro.locals.db;
+const n = async (sql: string) => (await db.prepare(sql).first<{ n: number }>())?.n ?? 0;
+const [pub, pdraft, bpub, bdraft, cnew, cprog, ctotal] = await Promise.all([
+  n("SELECT COUNT(*) n FROM projects WHERE state='published'"), n("SELECT COUNT(*) n FROM projects WHERE state!='published'"),
+  n("SELECT COUNT(*) n FROM posts WHERE state='published'"), n("SELECT COUNT(*) n FROM posts WHERE state!='published'"),
+  n("SELECT COUNT(*) n FROM contacts WHERE status='new'"), n("SELECT COUNT(*) n FROM contacts WHERE status='in_progress'"), n('SELECT COUNT(*) n FROM contacts')
+]);
+const contacts = (await db.prepare('SELECT id, name, subject, status, created_at FROM contacts ORDER BY created_at DESC LIMIT 5').all<any>()).results;
+const edits = (await db.prepare(`SELECT 'project' k, id ref, title, state, updated_at FROM projects UNION ALL SELECT 'post', slug, title, state, updated_at FROM posts ORDER BY updated_at DESC LIMIT 6`).all<any>()).results;
+const fmt = (s: string) => new Date(s).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo', dateStyle: 'short', timeStyle: 'short' });
+const label: Record<string, string> = { new: '未対応', in_progress: '対応中', done: '対応済み', draft: '下書き', published: '公開', private: '非公開' };
 ---
-
-<AdminLayout title="Dashboard" active="dashboard">
-  <div class="admin-heading">
-    <h1>Dashboard</h1>
+<AdminLayout title="ダッシュボード" active="dashboard" subtitle="サイトの状況と最近の更新">
+  <Fragment slot="actions"><a class="btn btn--primary btn--sm" href="/admin/blog/edit">＋ 記事を書く</a><a class="btn btn--sm" href="/admin/projects/edit">＋ プロジェクト</a></Fragment>
+  <div class="stats">
+    <a class="stat" href="/admin/contacts?status=new"><b>{cnew}</b><span>未対応の問い合わせ</span></a>
+    <a class="stat" href="/admin/projects"><b>{pub}</b><span>公開中のプロジェクト（非公開・下書き {pdraft}）</span></a>
+    <a class="stat" href="/admin/blog"><b>{bpub}</b><span>公開中の記事（非公開・下書き {bdraft}）</span></a>
+    <a class="stat" href="/admin/contacts"><b>{ctotal}</b><span>問い合わせ総数（対応中 {cprog}）</span></a>
   </div>
-
-  <p id="loading" class="loading-note">読み込み中…</p>
-
-  <div id="stats" class="stats-grid" hidden>
-    <a href="/admin/projects" class="panel stat-card">
-      <p class="eyebrow">Projects</p>
-      <p class="stat-card__num" id="stat-projects">–</p>
-      <p class="stat-card__sub" id="stat-projects-featured"></p>
-    </a>
-    <a href="/admin/blog" class="panel stat-card">
-      <p class="eyebrow">Blog</p>
-      <p class="stat-card__num" id="stat-posts">–</p>
-      <p class="stat-card__sub" id="stat-posts-published"></p>
-    </a>
+  <div class="grid grid--2">
+    <section class="panel" aria-labelledby="d-c"><h2 id="d-c">最近の問い合わせ</h2>
+      {contacts.length === 0 ? <p class="muted" style="margin-top:.75rem">まだ問い合わせはありません。</p> : (
+        <ul style="margin-top:.75rem;display:grid;gap:.6rem">{contacts.map((c) => (
+          <li style="display:flex;justify-content:space-between;gap:1rem;align-items:center"><a href={`/admin/contacts/view?id=${c.id}`} style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{c.subject} <span class="muted">— {c.name}</span></a><span class={`pill pill--${c.status}`}>{label[c.status]}</span></li>
+        ))}</ul>)}
+    </section>
+    <section class="panel" aria-labelledby="d-e"><h2 id="d-e">最近の更新</h2>
+      {edits.length === 0 ? <p class="muted" style="margin-top:.75rem">コンテンツがありません。</p> : (
+        <ul style="margin-top:.75rem;display:grid;gap:.6rem">{edits.map((e) => (
+          <li style="display:flex;justify-content:space-between;gap:1rem;align-items:center"><a href={e.k === 'post' ? `/admin/blog/edit?slug=${e.ref}` : `/admin/projects/edit?id=${e.ref}`} style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{e.title}</a><span class="muted" style="font-size:var(--fs-0);white-space:nowrap">{fmt(e.updated_at)} · <span class={`pill pill--${e.state}`}>{label[e.state]}</span></span></li>
+        ))}</ul>)}
+    </section>
   </div>
-
-  <div class="quick-links">
-    <a class="btn btn-primary" href="/admin/projects/edit">+ 新しいProject</a>
-    <a class="btn btn-primary" href="/admin/blog/edit">+ 新しいNote</a>
-    <a class="btn" href="/admin/about">Aboutを編集</a>
-    <a class="btn" href="/admin/settings">Site Settingsを編集</a>
-  </div>
+  <section class="panel" style="margin-top:1.25rem"><h2>公開への反映について</h2>
+    <p class="hint">このサイトはコンテンツをデータベースから都度読み込む構成のため、保存した内容は<strong>再ビルドやデプロイなしで即時に</strong>公開サイトへ反映されます（ブログ・プロジェクトの個別ページは最大60秒ほどエッジでキャッシュされることがあります）。</p>
+  </section>
 </AdminLayout>
-
-<script>
-  import { requireAdmin, getDb, collection, getDocs } from '@/lib/firebase-client';
-
-  await requireAdmin();
-  const db = getDb();
-
-  const [projectsSnap, postsSnap] = await Promise.all([
-    getDocs(collection(db, 'projects')),
-    getDocs(collection(db, 'blog'))
-  ]);
-
-  const projects = projectsSnap.docs.map((d) => d.data());
-  const posts = postsSnap.docs.map((d) => d.data());
-
-  document.getElementById('stat-projects')!.textContent = String(projects.length);
-  document.getElementById('stat-projects-featured')!.textContent = `Featured: ${
-    projects.filter((p: any) => p.featured).length
-  }`;
-  document.getElementById('stat-posts')!.textContent = String(posts.length);
-  document.getElementById('stat-posts-published')!.textContent = `Published: ${
-    posts.filter((p: any) => p.published).length
-  } / Draft: ${posts.filter((p: any) => !p.published).length}`;
-
-  document.getElementById('loading')!.setAttribute('hidden', '');
-  document.getElementById('stats')!.removeAttribute('hidden');
-</script>
-
-<style>
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-    margin-bottom: 2.5rem;
-  }
-
-  .stat-card {
-    text-decoration: none;
-    color: var(--color-ink);
-    display: block;
-  }
-
-  .stat-card:hover {
-    border-color: var(--color-accent);
-  }
-
-  .stat-card__num {
-    font-size: 2.5rem;
-    margin-top: 0.5rem;
-  }
-
-  .stat-card__sub {
-    margin-top: 0.4rem;
-    font-family: var(--font-mono);
-    font-size: var(--fs-000);
-    color: var(--color-muted);
-  }
-
-  .quick-links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-  }
-</style>

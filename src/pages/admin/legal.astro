@@ -1,0 +1,23 @@
+---
+export const prerender = false;
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import AField from '@/components/AField.astro';
+import SaveBar from '@/components/SaveBar.astro';
+import { getPage } from '@/lib/content';
+const slug = Astro.url.searchParams.get('page') === 'privacy' ? 'privacy' : 'terms';
+const p = await getPage(Astro.locals.db, slug);
+const tabs = [['terms', '利用規約'], ['privacy', 'プライバシーポリシー']];
+---
+<AdminLayout title="利用規約・プライバシーポリシー" active="legal" subtitle="本文はMarkdownで編集します。実際のサービス内容に合わせて見直してください。">
+  <Fragment slot="actions"><a class="btn btn--sm" href={`/${slug}`} target="_blank" rel="noopener">公開ページを見る ↗</a></Fragment>
+  <nav class="adm-actions" aria-label="ページ切替" style="margin-bottom:1rem">{tabs.map(([k, l]) => <a class:list={['btn', 'btn--sm', { 'btn--primary': k === slug }]} href={`/admin/legal?page=${k}`} aria-current={k === slug ? 'page' : undefined}>{l}</a>)}</nav>
+  <form data-admin-form data-endpoint="/api/admin/pages">
+    <input type="hidden" name="slug" value={slug} />
+    <div class="panel"><div class="grid">
+      <AField name="title" label="タイトル" value={p?.title ?? ''} required maxlength={100} />
+      <AField name="description" label="meta description" value={p?.description ?? ''} maxlength={300} />
+      <AField name="body_md" label="本文（Markdown）" as="textarea" md rows={20} value={p?.body_md ?? ''} />
+    </div><p class="hint" style="margin-top:.75rem">最終更新: {p ? p.updated_at.slice(0, 10) : '—'}（保存すると更新日が変わります）</p></div>
+    <SaveBar />
+  </form>
+</AdminLayout>

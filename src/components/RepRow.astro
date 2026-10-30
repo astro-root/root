@@ -1,0 +1,28 @@
+---
+export interface FieldDef { k: string; label: string; type?: 'text' | 'checkbox' | 'url' | 'textarea' | 'select'; placeholder?: string; maxlength?: number; options?: { value: string; label: string }[]; fixed?: boolean }
+interface Props { fields: FieldDef[]; row: Record<string, any>; sortable?: boolean; removable?: boolean; uid: string }
+const { fields, row, sortable, removable = true, uid } = Astro.props;
+---
+<div class="rep-row" data-row>
+  {fields.map((f) => {
+    const id = `${uid}-${f.k}`;
+    return f.type === 'checkbox' ? (
+      <label class="check"><input type="checkbox" data-k={f.k} checked={!!row[f.k]} /><span>{f.label}</span></label>
+    ) : f.fixed ? (
+      <div class="field"><span class="label">{f.label}</span><span style="min-height:2.75rem;display:flex;align-items:center;font-weight:600">{row[f.k]}</span><input type="hidden" data-k={f.k} value={row[f.k] ?? ''} /></div>
+    ) : (
+      <div class="field">
+        <label for={id}>{f.label}</label>
+        {f.type === 'textarea' ? <textarea class="textarea" id={id} data-k={f.k} rows="2" style="min-height:2.75rem" maxlength={f.maxlength} placeholder={f.placeholder}>{row[f.k] ?? ''}</textarea>
+          : f.type === 'select' ? <select class="select" id={id} data-k={f.k}>{(f.options ?? []).map((o) => <option value={o.value} selected={o.value === String(row[f.k] ?? '')}>{o.label}</option>)}</select>
+          : <input class="input" id={id} data-k={f.k} type={f.type ?? 'text'} value={row[f.k] ?? ''} maxlength={f.maxlength} placeholder={f.placeholder} />}
+        <p class="field-error"></p>
+      </div>
+    );
+  })}
+  <div class="rep-row__tools">
+    {sortable && <button type="button" class="icon-btn" data-up aria-label="上へ移動">↑</button>}
+    {sortable && <button type="button" class="icon-btn" data-down aria-label="下へ移動">↓</button>}
+    {removable && <button type="button" class="icon-btn" data-remove aria-label="この行を削除">✕</button>}
+  </div>
+</div>

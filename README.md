@@ -1,160 +1,146 @@
-# Root's Laboratory
+# るーとの研究室
 
-Root's Laboratory の個人サイト。Astro（SSR / Cloudflare Pages）+ Firebase（Auth + Firestore）構成。
+天文・物理・科学とソフトウェア開発を横断する、個人ラボラトリーのWebサイトです（旧 Root's Laboratory）。
+公開サイトと、ブラウザから運営できる管理画面（CMS）を1つのプロジェクトで提供します。
 
-デザインはモダン・カードベース（Inter + IBM Plex Mono、角丸カード、ステータスの色分けバッジ）。quiznavi.astro-root.com / nopo1.com を参考に、Home は4枚のダッシュボード風カード、Projectsはステータスバッジ付きのカードグリッド、Notesは1枚のパネル内のログリスト。ナビゲーション右上のアイコンでライト/ダークを切り替えられます（選択は localStorage に保存）。
+| | |
+|---|---|
+| フレームワーク | [Astro 4](https://astro.build/)（SSR）+ `@astrojs/cloudflare` |
+| ホスティング | Cloudflare Pages（Pages Functions / workerd） |
+| データベース | Cloudflare D1（SQLite）。スキーマは `migrations/` |
+| 認証 | サーバー側セッション（PBKDF2-SHA256 + HttpOnly Cookie + CSRFトークン） |
+| テスト | Playwright（E2E）/ `astro check`（型）/ 独自リンター / 本番ビルドのスモークテスト |
 
-- 公開サイトは Firestore からリクエスト時にデータを読む（Adminで保存 → 即座にサイトに反映）
-- Firebase未設定でも壊れない：`src/content/` のMarkdownに自動フォールバックする
-- Admin (`/admin`) の権限チェックは **Firestore Security Rules** が本体。フロントエンドのガードはUXのためだけ
+> **以前の構成からの変更点**: 旧版は Firebase（Auth/Firestore）をブラウザから直接操作する構成でした。
+> サーバー側での認証・認可、問い合わせの保存、レート制限を実現するため、Cloudflare D1 + サーバー側認証へ移行しています（理由は [docs/DATABASE.md](docs/DATABASE.md)）。
 
 ---
 
-## 1. ローカル開発
+## 1. 事前準備（Chromebook）
+
+1. 設定 → 「デベロッパー」→ **Linux開発環境** をオンにする。
+2. Linuxターミナルを開き、以下を実行（初回のみ）。
+
+   ```bash
+   sudo apt update && sudo apt install -y git curl ca-certificates
+   # Node.js 20 以上（nvm を使う例。ホームディレクトリ内にのみ入るのでシステムを汚しません）
+   curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+   exec bash && nvm install 22
+   node -v   # v22.x.x
+   ```
+3. GitHub認証（どちらか）:
+   - `sudo apt install gh && gh auth login`（ブラウザで認証。トークンはgh が安全に保管）
+   - または SSH 鍵: `ssh-keygen -t ed25519` → 公開鍵 `~/.ssh/id_ed25519.pub` を GitHub に登録。
+
+## 2. セットアップ（5分）
 
 ```bash
-npm install
-npm run dev      # http://localhost:4321 （Firestore未設定でもMarkdownで動く）
-npm run build    # dist/ にビルド（Cloudflare Workers形式）
-npm run preview  # wrangler pages dev でビルド結果をローカル確認（Cloudflare実行環境の再現）
+git clone git@github.com:astro-root/（リポジトリ名）.git roots-laboratory   # 公開サイトのリポジトリ
+cd roots-laboratory
+bash scripts/setup.sh          # 依存関係・.dev.vars・ローカルDB・既存コンテンツの投入
+npm run admin:create           # 管理者を作成（パスワードは画面に表示されません）
+bash scripts/dev.sh            # http://localhost:4321
 ```
 
-`npm run dev` の通常の Astro dev サーバーは Firebase を設定していなくても動きます。まずはこれで見た目を確認してください。
+- 公開サイト: <http://localhost:4321>　管理画面: <http://localhost:4321/admin>
+- ChromebookのLinuxで起動したサーバーは、Chrome OS側のブラウザから `localhost` で開けます。
+- スマホ実機で確認したい場合は `bash scripts/dev.sh --host` で起動し、表示された `Network:` のURLを開きます（同一Wi-Fi内のみ）。
 
----
+`setup.sh` は何度実行しても安全です（既存の `.dev.vars` とDBの内容は上書きしません）。`sudo` やシステム設定の変更は行いません。
 
-## 2. Firebaseのセットアップ（Admin機能に必須）
+## 3. スクリプト一覧
 
-**ここはあなたご自身のGoogleアカウントで行う必要があります。** 私（Claude）が代わりに作ることはできません。所要時間の目安は10〜15分です。
-
-### 2-1. プロジェクト作成
-
-1. https://console.firebase.google.com を開き、「プロジェクトを追加」
-2. 名前は何でも良い（例: `roots-laboratory`）。Googleアナリティクスは不要ならオフでOK
-
-### 2-2. Webアプリを追加してconfigを取得
-
-1. プロジェクトの概要画面 →「</>」(Web) アイコン → アプリのニックネームを入力して登録
-2. 表示される `firebaseConfig` の値を、プロジェクト直下の `.env`（`.env.example` をコピーして作成）に転記
-   ```bash
-   cp .env.example .env
-   ```
-3. `PUBLIC_FIREBASE_API_KEY` などを埋める
-
-### 2-3. Authentication（ログイン用アカウント）
-
-1. Firebase Console → Authentication → Sign-in method →「メール/パスワード」を有効化
-2. Authentication → Users →「ユーザーを追加」→ 自分のメールアドレスとパスワードで**1人だけ**作成
-3. 作成したユーザーの行に表示される **User UID** をコピー
-4. `.env` の `PUBLIC_ADMIN_UID` に貼り付け
-
-### 2-4. Firestore Database
-
-1. Firebase Console → Firestore Database →「データベースの作成」→ 本番モードで作成（リージョンは `asia-northeast1` などお好みで）
-2. 「ルール」タブを開き、このリポジトリの `firestore.rules` の中身をコピーして貼り付け
-3. `ADMIN_UID_HERE` の部分を、2-3でコピーした User UID に書き換えてから「公開」
-
-これで **書き込みはそのUIDでログインした人だけ**、**読み込みは公開データのみ誰でも**という制御が有効になります。
-
-### 2-5. 既存コンテンツをFirestoreへ流し込む（任意・初回のみ）
-
-今の About / Projects / Blog はそのままだと `src/content/` のMarkdownから読まれます（フォールバック）。Adminから管理したい場合は、一度だけ流し込んでください。
-
-1. Firebase Console → プロジェクトの設定 → サービスアカウント →「新しい秘密鍵を生成」
-2. ダウンロードしたJSONを `scripts/service-account.json` として保存（`.gitignore`済みなのでコミットされません）
-3. 実行:
-   ```bash
-   npm run seed
-   ```
-
-実行後、Firebase Console の Firestore Database に `projects` `blog` `about` `settings` の各コレクションができているはずです。
-
-### 2-6. Cloudflare Pages側の環境変数
-
-Cloudflare Pages のプロジェクト設定 → Environment variables に、`.env` と同じ6つの `PUBLIC_FIREBASE_*` と `PUBLIC_ADMIN_UID` を追加してください（Production / Preview 両方）。
-
----
-
-## 3. Admin (`/admin`) の使い方
-
-`https://あなたのドメイン/admin` にアクセスし、2-3で作成したメールアドレス／パスワードでログインします。
-
-| ページ | できること |
+| コマンド | 内容 |
 |---|---|
-| `/admin` | Dashboard（件数の概要、クイックリンク） |
-| `/admin/projects` | 一覧・削除・Featured切替・表示順の入れ替え |
-| `/admin/projects/edit` | 新規作成・編集（`?id=...`） |
-| `/admin/blog` | 一覧・削除・公開/非公開切替・Featured切替 |
-| `/admin/blog/edit` | 新規作成・編集（Markdown本文） |
-| `/admin/about` | About本文とプロフィール情報の編集 |
-| `/admin/settings` | Heroの文言、サイト説明、SNS/Contactリンク、Footer文言 |
+| `bash scripts/setup.sh` | 開発環境のセットアップ（`--skip-install` / `--with-browser`） |
+| `bash scripts/dev.sh` | 開発サーバー起動（DBを最新スキーマに） |
+| `bash scripts/check.sh` | **Lint → 型チェック → ビルド → 本番ビルドのスモークテスト**（`--quick` / `--e2e`） |
+| `bash scripts/git-push.sh` | 内容を表示 → 品質チェック → **`yes` と入力した場合のみ** push |
+| `bash scripts/deploy.sh --migrate` / `--pages` | 本番DBのマイグレーション / Pagesへのデプロイ（**各々確認あり**） |
+| `bash scripts/backup.sh [--remote]` | D1のSQLバックアップ（`backups/`、Git管理外） |
+| `bash scripts/restore.sh <file>` | バックアップの復元（空DBへの復元に限定） |
+| `npm run admin:create [-- --remote]` | 管理者の作成・パスワード再設定 |
+| `npm run test:e2e` | PlaywrightのE2E（下記） |
 
-保存すると、次にそのページを開いた訪問者から即座に新しい内容が表示されます（ビルド不要）。
+どのスクリプトも、確認なしに本番へ変更を加えません。
 
----
+## 4. 環境変数・シークレット
 
-## 4. 動作確認チェックリスト
+| 名前 | 場所 | 必須 | 説明 |
+|---|---|---|---|
+| `IP_HASH_SALT` | `.dev.vars`（ローカル）/ Pages の**シークレット**（本番） | 本番は必須 | 送信元IPをハッシュ化する際のソルト。長いランダム文字列（`setup.sh` が自動生成） |
+| `TURNSTILE_SECRET` | 同上 | 任意 | 設定すると問い合わせフォームで Cloudflare Turnstile を検証 |
+| `PUBLIC_TURNSTILE_SITE_KEY` | `.env` / Pages のビルド変数 | 任意 | Turnstile のサイトキー（公開値）。`TURNSTILE_SECRET` とセットで設定 |
+| `SITE_URL` | `.env` / Pages のビルド変数 | 推奨 | 公開URL。canonical・sitemap・OGPの基準（既定 `https://astro-root.com`） |
+| `CLOUDFLARE_API_TOKEN` | 実行時のシェル環境のみ | デプロイ時 | `scripts/deploy.sh` 用。**ファイルに書かない** |
+| `CF_PAGES_PROJECT` | 実行時のシェル環境 | デプロイ時 | Pages のプロジェクト名 |
 
-Firebaseのセットアップ（上記2章）が終わったら、実際に以下を確認してください。私の側では実在のFirebaseプロジェクトを持っていないため、この一連の動作は**あなたの環境でご確認いただく必要があります**。
+`.env` / `.dev.vars` は `.gitignore` 済みです。雛形は `.env.example` / `.dev.vars.example`。
 
-- [ ] `/admin/login` でメール/パスワードでログインできる
-- [ ] 管理者以外のアカウント（もし作った場合）ではログインできない、またはログインできてもデータ操作が失敗する
-- [ ] `/admin/projects` で新規Projectを追加 → `/projects` に反映される
-- [ ] Projectを編集 → 内容が公開ページに反映される
-- [ ] Projectを削除 → 公開ページから消える
-- [ ] 表示順（↑↓）を変更 → `/projects` の並び順が変わる
-- [ ] Featuredを切り替え → Homeの「Featured Projects」に出入りする
-- [ ] `/admin/blog` で記事を作成 → 「公開」チェックを外した状態では `/blog` に出ない
-- [ ] 「公開」に切り替えると `/blog` に出る
-- [ ] 記事を編集・削除できる
-- [ ] `/admin/about` を編集 → `/about` とHomeの抜粋の両方に反映される
-- [ ] `/admin/settings` でHero文言やSNSリンクを変更 → Home/Contact/Footerに反映される
-- [ ] ログアウト後、`/admin/*` にアクセスすると `/admin/login` に戻される
-- [ ] ブラウザの開発者ツールでFirestoreに直接書き込みリクエストを送っても（未ログイン状態で）拒否される（Security Rulesの確認）
+## 5. 管理者アカウント
 
-うまくいかない項目があれば、エラーメッセージ（特に `status-msg` に赤字で出るもの）と一緒に教えてください。
+- **作成**: `npm run admin:create`（ローカル）／`npm run admin:create -- --remote`（本番、確認あり）。メールとパスワード（12文字以上）を対話入力します。
+- **復旧（パスワードを忘れた）**: 同じコマンドを同じメールアドレスで再実行すると、パスワードが更新され、**全セッションが失効**します。
+- **変更**: 管理画面の「アカウント」から（他端末のログインは無効化されます）。
+- デフォルトの管理者・固定パスワードは存在しません。パスワードはPBKDF2-SHA256（10万回）でハッシュ化されて保存され、平文はファイルにもログにも残りません。
+- ロールは現在 `admin` のみです（`admins.role` 列は将来の拡張用）。複数管理者が必要な場合は、異なるメールで `admin:create` を実行します。
 
----
+## 6. 管理画面でできること
 
-## 5. 構成
+ダッシュボード / プロジェクト・ブログ（下書き・公開・非公開・予約公開、Markdown編集+プレビュー、画像アップロード、SEO）/ プロフィール / トップページ（セクションの順序・表示切替・お知らせ）/ 利用規約・プライバシーポリシー / 問い合わせ（ステータス・メモ・削除・期限切れ一括削除）/ メディア / サイト設定（名称・ロゴ・ナビ・フッター・SNS・SEO/OGP）/ 表示設定（**流れ星のON/OFFと頻度**、オープニング、スクロール演出）/ アカウント。
 
-```
-src/
-  components/       Nav, Footer, Opening, CosmicField, ProjectEntry, NoteRow
-  content/          Firestore未設定時のフォールバック用Markdown（従来通り編集可）
-  lib/
-    content.ts          公開ページ用の統一データ取得（Firestore→なければMarkdown）
-    firestore-rest.ts    サーバー側の読み取り専用REST実装（SDK不要、Workers対応）
-    firebase-client.ts   ブラウザ側（/admin専用）：Auth + Firestore SDK
-  layouts/
-    Layout.astro         公開ページ共通レイアウト
-    AdminLayout.astro    Admin共通レイアウト（サイドバー）
-  pages/
-    index.astro, about.astro, projects.astro, blog/*, contact.astro, 404.astro
-    admin/               Admin一式（login, index, projects/*, blog/*, about, settings）
-  styles/
-    global.css   公開サイトのデザイントークン
-    admin.css    Admin共通UI（ボタン・フォーム・テーブル等）
-scripts/
-  seed.mjs             ローカルMarkdown → Firestore への初回投入スクリプト
-firestore.rules        Firestore Security Rules（実際の権限強制はここ）
-.env.example           Firebase設定のテンプレート
+**公開への反映**: コンテンツはリクエストごとにD1から読むため、保存した内容は**再ビルド・再デプロイなしで即時反映**されます。
+
+## 7. テスト
+
+```bash
+bash scripts/check.sh            # Lint + 型 + ビルド + 本番スモーク（約80秒）
+bash scripts/check.sh --e2e      # さらにE2E
 ```
 
----
+E2E は専用DB（`.e2e/`）を毎回作り直すため、開発用DBには影響しません。
 
-## 6. 既知の制約・今後の調整点
+- ブラウザが無い場合: `npx playwright install chromium`。Chromebookで共有ライブラリが不足する場合は、すでにインストール済みのChromium/Chromeがあれば `CHROME_PATH=/path/to/chrome npm run test:e2e` で使えます。
+- E2E は `astro dev` に対して動きます。**本番ビルド固有の問題**は `scripts/smoke.mjs`（`check.sh` に組み込み済み）が検出します。
 
-- `public/og-default.svg` はSVGです。X/FacebookなどのOGP表示の多くはSVGに対応していないため、公開前にPNG（1200×630）に変換してください。
-- Admin画面のFirebase SDKバンドルは約170KB(gzip)あります。`/admin` 配下でのみ読み込まれ、公開ページの訪問者には配信されません。
-- Blogの本文はMarkdownとして保存し、表示時に `marked` でHTML化しています。Adminからの入力はサイト所有者本人のみが行う前提のため、サニタイズ処理は行っていません（第三者が投稿できる仕組みではないため）。
-- 「Featured設定」はProjects/Blog双方に保存されますが、公開ページ側でBlogのFeaturedは現状「一覧の並び順（Featured優先→新着順）」にのみ使用しています。
-- 私の環境ではCloudflare/Google Cloudの外部ネットワークにアクセスできないため、実在のFirebaseプロジェクトを使ったログイン・保存の動作確認はできていません。ビルドの成功、SSRでのページ表示、権限ガードのリダイレクトまでは確認済みです。上記チェックリストを、あなたの環境で実施してください。
+## 8. デプロイ・DB
 
-## 7. デプロイ（Cloudflare Pages）
+- 初回の Cloudflare 側の設定（D1作成・バインド・シークレット・Pagesプロジェクト）: **[docs/DEPLOY.md](docs/DEPLOY.md)**
+- スキーマ・マイグレーション・バックアップ/復元・データ保持: **[docs/DATABASE.md](docs/DATABASE.md)**
+- 利用規約・プライバシーポリシーの確認事項: **[docs/LEGAL_REVIEW.md](docs/LEGAL_REVIEW.md)**
 
-- Build command: `npm run build`
-- Build output directory: `dist`
-- Framework preset: Astro（`@astrojs/cloudflare` アダプタを使うため、SSR/Functionsとして自動的にデプロイされます）
-- Environment variables: `.env` と同じ `PUBLIC_FIREBASE_*` / `PUBLIC_ADMIN_UID` を設定
-- `astro.config.mjs` の `site` は実際のドメインに合わせてください（現在 `https://astro-root.com`）
+## 9. GitHubへの反映
+
+```bash
+git status                        # 変更内容を確認
+git add -A && git commit -m "リニューアル: るーとの研究室"
+bash scripts/git-push.sh          # 内容を確認し、yes と入力した場合のみ push
+```
+
+リモートが未設定なら `git remote add origin git@github.com:astro-root/（リポジトリ名）.git`。
+既存の `main` を置き換える場合は、**必ず新しいブランチ（例: `renewal`）にpushしてPull Requestで確認**してから統合してください。
+
+## 10. ディレクトリ構成
+
+```
+src/pages/            公開ページ / admin/（管理画面）/ api/（公開API・管理API）
+src/layouts, components, styles/   デザインシステム（global.css = 公開・管理画面共通トークン）
+src/lib/              auth（認証・レート制限）/ content（D1アクセス）/ markdown（サニタイズ）/ admin-schema（サーバー側検証）
+src/middleware.ts     旧URLの301・Origin検査・管理画面の認証/CSRF・セキュリティヘッダー
+src/scripts/          ブラウザ側JS（検索・流れ星・管理画面）
+migrations/           D1スキーマ   seed/  初期コンテンツ（Markdown）   scripts/  開発・運用スクリプト
+tests/e2e/            Playwright
+```
+
+## 11. セキュリティ上の注意
+
+- 管理画面・管理APIはサーバー側で毎回セッションを検証し、変更系は **CSRFトークン + 同一Origin検査** を要求します。ログイン試行・問い合わせ・パスワード変更にはレート制限があります。
+- MarkdownはサーバーでHTMLを無効化（生HTMLはエスケープ）し、`javascript:` などのURLを除去します。管理画面のプレビューも同じレンダラーです。
+- CSPには `'unsafe-inline'`（スクリプト/スタイル）を含みます。Astroがインラインスクリプトを出力するためで、nonce化は未対応です（既知の制限）。
+- 画像アップロードはマジックバイトでPNG/JPEG/GIF/WebPのみ許可（SVGは不許可）、1.5MBまで。
+- 問い合わせにはIPアドレスそのものを保存せず、ソルト付きハッシュのみ保存します。
+- `backups/` のSQLには個人情報が含まれます。共有・コミットしないでください。
+
+## 12. 既知の制限・未対応
+
+[docs/DEPLOY.md の末尾](docs/DEPLOY.md#既知の制限未検証事項) を参照してください。

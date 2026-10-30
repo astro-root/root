@@ -1,106 +1,42 @@
 ---
 export const prerender = false;
-
 import Layout from '@/layouts/Layout.astro';
-import { getAbout, getSettings } from '@/lib/content';
+import { getPage, getSettings } from '@/lib/content';
+import { renderMarkdown } from '@/lib/markdown';
 
-const about = await getAbout();
-const settings = await getSettings();
-
-const interests = ['Astronomy', 'Physics', 'Software', 'Quiz'];
-
-const links = [
-  { label: 'GitHub', href: settings.githubUrl },
-  { label: 'X', href: settings.xUrl },
-  { label: 'Email', href: `mailto:${settings.contactEmail}` }
-];
+const db = Astro.locals.db;
+const [page, settings] = await Promise.all([getPage(db, 'about'), getSettings(db)]);
+if (!page) return new Response(null, { status: 404 });
+const m = page.meta as { displayName?: string; status?: string; based?: string; image?: string; imageAlt?: string };
+const { html } = renderMarkdown(page.body_md);
+const links = [...settings.social, ...(settings.site.contactEmail ? [{ label: 'Email', href: `mailto:${settings.site.contactEmail}` }] : [])];
+const jsonLd = { '@context': 'https://schema.org', '@type': 'ProfilePage', mainEntity: { '@type': 'Person', name: m.displayName ?? 'Root', description: m.status } };
 ---
 
-<Layout title="About" description="Rootについて。">
-  <section class="wrap about">
-   <div class="about__inner">
-    <h1>Root</h1>
-    <p class="about__status">{about.status}</p>
-
-    <ul class="about__interests">
-      {interests.map((i) => <li>{i}</li>)}
-    </ul>
-
-    <p class="about__based">{about.based}</p>
-
-    <ul class="about__links">
-      {
-        links.map((l) => (
-          <li>
-            <a
-              class="btn-pill"
-              href={l.href}
-              target={l.href.startsWith('http') ? '_blank' : undefined}
-              rel="noreferrer"
-            >
-              {l.label}
-            </a>
-          </li>
-        ))
-      }
-    </ul>
-
-    {about.bodyHtml && <div class="about__notes prose" set:html={about.bodyHtml} />}
-   </div>
-  </section>
+<Layout title={page.title} description={page.description || 'るーとについて。'} jsonLd={jsonLd}>
+  <div class="shell page">
+    <header class="page-head">
+      <p class="eyebrow">About</p>
+      <h1>{m.displayName ?? 'Root'}</h1>
+      {m.status && <p class="lede">{m.status}</p>}
+    </header>
+    <div class="article" style="grid-template-columns:minmax(0,1fr) 20rem">
+      <div class="article__main">
+        <div class="prose" set:html={html} />
+        {settings.home.interests.length > 0 && (<>
+          <h2 style="margin-top:3rem;font-size:var(--fs-3)">関心領域</h2>
+          <ul class="interest-grid" style="margin-top:1.25rem">{settings.home.interests.map((i) => <li><h3>{i.label}</h3><p>{i.note}</p></li>)}</ul>
+        </>)}
+      </div>
+      <aside class="article__aside">
+        {m.image && <img src={m.image} alt={m.imageAlt ?? ''} style="border-radius:14px;margin-bottom:1.5rem;border:1px solid var(--line)" width="320" height="320" />}
+        <dl class="meta-table">
+          {m.based && <><dt>Based</dt><dd>{m.based}</dd></>}
+        </dl>
+        {links.length > 0 && <ul class="taglist" style="margin-top:1.25rem">
+          {links.map((l) => <li><a class="btn btn--sm" href={l.href} target={l.href.startsWith('http') ? '_blank' : undefined} rel="noopener noreferrer">{l.label}</a></li>)}
+        </ul>}
+      </aside>
+    </div>
+  </div>
 </Layout>
-
-<style>
-  .about {
-    padding-top: clamp(5rem, 10vw, 7rem);
-    padding-bottom: var(--section-space);
-  }
-
-  .about__inner {
-    max-width: 34rem;
-  }
-
-  .about h1 {
-    font-size: clamp(2.5rem, 7vw, 3.5rem);
-    font-weight: 600;
-  }
-
-  .about__status {
-    margin-top: 0.75rem;
-    color: var(--color-ink-soft);
-    font-size: var(--fs-1);
-  }
-
-  .about__interests {
-    margin-top: 2rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.3rem;
-  }
-
-  .about__interests li {
-    font-size: var(--fs-1);
-  }
-
-  .about__based {
-    margin-top: 2rem;
-    font-family: var(--font-mono);
-    font-size: var(--fs-00);
-    color: var(--color-muted);
-  }
-
-  .about__links {
-    margin-top: 1.25rem;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.6rem;
-  }
-
-  .about__notes {
-    margin-top: clamp(3rem, 7vw, 4.5rem);
-    padding-top: 2rem;
-    border-top: 1px solid var(--color-line);
-    color: var(--color-ink-soft);
-    font-size: var(--fs-00);
-  }
-</style>

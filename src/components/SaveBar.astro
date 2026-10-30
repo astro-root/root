@@ -1,0 +1,8 @@
+---
+interface Props { label?: string }
+const { label = '保存する' } = Astro.props;
+---
+<div class="savebar">
+  <span class="savestate" data-savestate data-s="saved" role="status" aria-live="polite">変更なし</span>
+  <div class="adm-actions"><slot /><button type="submit" class="btn btn--primary">{label}</button></div>
+</div>

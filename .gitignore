@@ -2,7 +2,11 @@ node_modules/
 dist/
 .astro/
 .env
+.dev.vars
 .DS_Store
-.env
-scripts/service-account.json
 .wrangler/
+test-results/
+playwright-report/
+db/seed.sql
+backups/
+.e2e/

@@ -1,115 +1,53 @@
 ---
 export const prerender = false;
-
 import Layout from '@/layouts/Layout.astro';
-import { getPostBySlug } from '@/lib/content';
+import { getPost, listPosts } from '@/lib/content';
+import { renderMarkdown } from '@/lib/markdown';
 
 const { slug } = Astro.params;
-const post = slug ? await getPostBySlug(slug) : null;
+const db = Astro.locals.db;
+const post = slug ? await getPost(db, slug) : null;
+if (!post) return new Response(null, { status: 404 });
+Astro.response.headers.set('Cache-Control', 'public, max-age=0, s-maxage=60');
 
-if (!post) {
-  return Astro.redirect('/404');
-}
-
-const { title, date, category, tags, excerpt, contentHtml } = post;
-
-const formatted = new Date(date).toLocaleDateString('ja-JP', {
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit'
-});
+const { html, toc } = renderMarkdown(post.body_md);
+const all = await listPosts(db);
+const i = all.findIndex((p) => p.slug === post.slug);
+const newer = i > 0 ? all[i - 1] : null;
+const older = i >= 0 && i < all.length - 1 ? all[i + 1] : null;
+const date = (post.published_at ?? '').slice(0, 10);
+const url = new URL(`/blog/${post.slug}`, Astro.site).toString();
+const jsonLd = {
+  '@context': 'https://schema.org', '@type': 'BlogPosting', headline: post.title,
+  description: post.seo_description || post.excerpt, datePublished: post.published_at, dateModified: post.updated_at,
+  mainEntityOfPage: url, author: { '@type': 'Person', name: 'Root' }, inLanguage: 'ja',
+  ...(post.thumbnail ? { image: new URL(post.thumbnail, Astro.site).toString() } : {}), keywords: post.tags.join(', ')
+};
 ---
 
-<Layout title={title} description={excerpt}>
-  <article>
-    <header class="post-head wrap">
-      <a class="post-head__back" href="/blog">← Blog</a>
-      <p class="post-head__meta">
-        <time datetime={new Date(date).toISOString()}>{formatted}</time>
-        <span aria-hidden="true">/</span>
-        <span>{category}</span>
-      </p>
-      <h1>{title}</h1>
-      {
-        tags.length > 0 && (
-          <ul class="post-head__tags">
-            {tags.map((t) => (
-              <li>#{t}</li>
-            ))}
-          </ul>
-        )
-      }
-    </header>
-
-    <div class="post-body wrap prose" set:html={contentHtml} />
-
-    <footer class="post-foot wrap">
-      <a href="/blog">← すべてのノートを見る</a>
-    </footer>
-  </article>
+<Layout title={post.seo_title || post.title} description={post.seo_description || post.excerpt} type="article" publishedTime={post.published_at ?? undefined} ogImage={post.thumbnail ?? undefined} jsonLd={jsonLd}>
+  <div class="shell page">
+    <nav aria-label="パンくず" class="breadcrumb"><ol><li><a href="/">ホーム</a></li><li><a href="/blog">Blog</a></li><li aria-current="page">{post.title}</li></ol></nav>
+    <div class="article">
+      <article class="article__main">
+        <header class="article__head">
+          <p class="eyebrow"><time datetime={date}>{date}</time>{post.category ? ` · ${post.category}` : ''}</p>
+          <h1>{post.title}</h1>
+          {post.tags.length > 0 && <ul class="taglist">{post.tags.map((t) => <li><a class="tag" href={`/blog?tag=${encodeURIComponent(t)}`}>#{t}</a></li>)}</ul>}
+        </header>
+        {post.thumbnail && <img src={post.thumbnail} alt={post.thumbnail_alt} style="border-radius:14px;margin-bottom:2rem;border:1px solid var(--line)" width="1280" height="720" />}
+        <div class="prose" set:html={html} />
+        <nav aria-label="前後の記事" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(14rem,1fr));gap:1rem;margin-top:4rem">
+          {newer ? <a class="project" href={`/blog/${newer.slug}`} style="text-decoration:none"><span class="eyebrow">← 新しい記事</span><strong style="color:var(--ink)">{newer.title}</strong></a> : <span></span>}
+          {older && <a class="project" href={`/blog/${older.slug}`} style="text-decoration:none;text-align:right"><span class="eyebrow">古い記事 →</span><strong style="color:var(--ink)">{older.title}</strong></a>}
+        </nav>
+      </article>
+      {toc.length > 0 && (
+        <aside class="article__aside">
+          <p class="eyebrow" style="margin-bottom:0.75rem">目次</p>
+          <nav class="toc" aria-label="目次">{toc.map((t) => <a class={`toc--${t.depth}`} href={`#${t.id}`}>{t.text}</a>)}</nav>
+        </aside>
+      )}
+    </div>
+  </div>
 </Layout>
-
-<style>
-  .post-head {
-    padding-top: clamp(5rem, 10vw, 7rem);
-    padding-bottom: clamp(2rem, 5vw, 3rem);
-    border-bottom: 1px solid var(--color-line);
-  }
-
-  .post-head__back {
-    font-family: var(--font-mono);
-    font-size: var(--fs-000);
-    color: var(--color-muted);
-    text-decoration: none;
-  }
-
-  .post-head__back:hover {
-    color: var(--color-accent);
-  }
-
-  .post-head__meta {
-    display: flex;
-    gap: 0.6rem;
-    margin-top: 1.5rem;
-    font-family: var(--font-mono);
-    font-size: var(--fs-000);
-    color: var(--color-accent);
-  }
-
-  .post-head h1 {
-    margin-top: 0.75rem;
-    font-size: clamp(1.8rem, 5vw, 2.6rem);
-    font-weight: 600;
-    max-width: 22ch;
-  }
-
-  .post-head__tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    margin-top: 1.25rem;
-    font-family: var(--font-mono);
-    font-size: var(--fs-000);
-    color: var(--color-muted);
-  }
-
-  .post-body {
-    padding-block: clamp(3rem, 7vw, 5.5rem);
-  }
-
-  .post-foot {
-    padding-bottom: var(--section-space);
-    font-family: var(--font-mono);
-    font-size: var(--fs-00);
-  }
-
-  .post-foot a {
-    text-decoration: underline;
-    text-decoration-color: var(--color-line-strong);
-  }
-
-  .post-foot a:hover {
-    color: var(--color-accent);
-    text-decoration-color: var(--color-accent);
-  }
-</style>

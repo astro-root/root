@@ -1,0 +1,35 @@
+---
+export const prerender = false;
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import AField from '@/components/AField.astro';
+import SaveBar from '@/components/SaveBar.astro';
+import { CONTACT_STATUS_LABEL } from '@/lib/defaults';
+const id = Math.floor(Number(Astro.url.searchParams.get('id')));
+const c = Number.isInteger(id) && id > 0 ? await Astro.locals.db.prepare('SELECT id, name, email, subject, message, status, admin_note, created_at FROM contacts WHERE id = ?').bind(id).first<any>() : null;
+if (!c) return Astro.redirect('/admin/contacts');
+const fmt = (s: string) => new Date(s).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo', dateStyle: 'long', timeStyle: 'medium' });
+// 返信用リンク（件名は先頭にRe:を付け、本文には含めない）
+const reply = `mailto:${c.email}?subject=${encodeURIComponent('Re: ' + c.subject)}`;
+---
+<AdminLayout title={c.subject} active="contacts">
+  <Fragment slot="actions">
+    <a class="btn btn--sm" href="/admin/contacts">一覧へ</a>
+    <a class="btn btn--sm btn--primary" href={reply}>メールで返信</a>
+    <button type="button" class="btn btn--sm btn--danger" data-delete={`/api/admin/contacts?id=${c.id}`} data-confirm="この問い合わせを完全に削除します。元に戻せません。よろしいですか？" data-after="/admin/contacts">削除</button>
+  </Fragment>
+  <div class="edit-layout">
+    <section class="panel"><h2>お問い合わせ内容</h2>
+      <dl class="kv" style="margin:.75rem 0 1rem"><dt>受信日時</dt><dd>{fmt(c.created_at)}</dd><dt>お名前</dt><dd>{c.name}</dd><dt>メール</dt><dd>{c.email}</dd><dt>件名</dt><dd>{c.subject}</dd></dl>
+      <div class="msgbox">{c.message}</div>
+    </section>
+    <form class="panel" data-admin-form data-endpoint="/api/admin/contacts">
+      <h2>対応状況</h2>
+      <input type="hidden" name="id" value={c.id} />
+      <div class="grid" style="margin-top:.75rem">
+        <AField name="status" label="ステータス" as="select" value={c.status} options={Object.entries(CONTACT_STATUS_LABEL).map(([value, label]) => ({ value, label }))} />
+        <AField name="admin_note" label="管理者メモ（非公開）" as="textarea" rows={6} value={c.admin_note} maxlength={3000} />
+      </div>
+      <SaveBar />
+    </form>
+  </div>
+</AdminLayout>

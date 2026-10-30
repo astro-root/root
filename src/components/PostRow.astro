@@ -1,0 +1,16 @@
+---
+import type { Post } from '@/lib/content';
+interface Props { post: Post }
+const { post: p } = Astro.props;
+const date = (p.published_at ?? '').slice(0, 10);
+---
+<li class="reveal">
+  <a class="post-row" href={`/blog/${p.slug}`}>
+    <time datetime={date}>{date}</time>
+    <div>
+      <h3>{p.title}</h3>
+      {p.excerpt && <p>{p.excerpt}</p>}
+    </div>
+    {p.category && <span class="tag">{p.category}</span>}
+  </a>
+</li>

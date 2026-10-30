@@ -1,0 +1,34 @@
+---
+export const prerender = false;
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import { CONTACT_STATUS_LABEL } from '@/lib/defaults';
+const db = Astro.locals.db;
+const sp = Astro.url.searchParams;
+const status = ['new', 'in_progress', 'done'].includes(sp.get('status') ?? '') ? sp.get('status')! : '';
+const q = (sp.get('q') ?? '').trim().slice(0, 80);
+const esc = (s: string) => s.replace(/[\\%_]/g, (c) => '\\' + c);
+const where: string[] = []; const binds: unknown[] = [];
+if (status) { where.push('status = ?'); binds.push(status); }
+if (q) { where.push("(name LIKE ?1 ESCAPE '\\' OR email LIKE ?1 ESCAPE '\\' OR subject LIKE ?1 ESCAPE '\\' OR message LIKE ?1 ESCAPE '\\')".replace(/\?1/g, '?')); for (let i = 0; i < 4; i++) binds.push(`%${esc(q)}%`); }
+const rows = (await db.prepare(`SELECT id, name, email, subject, status, created_at FROM contacts ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY created_at DESC LIMIT 200`).bind(...binds).all<any>()).results;
+const retention = (await db.prepare("SELECT value FROM settings WHERE key = 'contact'").first<{ value: string }>());
+let days = 365; try { days = JSON.parse(retention?.value ?? '{}').retentionDays ?? 365; } catch { /* 既定値 */ }
+const expired = (await db.prepare('SELECT COUNT(*) n FROM contacts WHERE created_at < ?').bind(new Date(Date.now() - days * 86400_000).toISOString()).first<{ n: number }>())?.n ?? 0;
+const fmt = (s: string) => new Date(s).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo', dateStyle: 'short', timeStyle: 'short' });
+---
+<AdminLayout title="問い合わせ" active="contacts" subtitle="個人情報を含みます。閲覧・削除は管理者のみ可能です。">
+  <Fragment slot="actions">{expired > 0 && <button type="button" class="btn btn--sm btn--danger" data-delete={`/api/admin/contacts?olderThanDays=${days}`} data-confirm={`受信から${days}日を過ぎた問い合わせ ${expired} 件を完全に削除します。元に戻せません。よろしいですか？`} data-toast="{n} 件を削除しました">期限切れを削除（{expired}件）</button>}</Fragment>
+  <form class="toolbar" method="get" role="search">
+    <div class="field"><label for="q">検索</label><input class="input" id="q" name="q" value={q} placeholder="名前・メール・件名・本文" /></div>
+    <div class="field"><label for="st">ステータス</label><select class="select" id="st" name="status"><option value="">すべて</option>{Object.entries(CONTACT_STATUS_LABEL).map(([k, l]) => <option value={k} selected={k === status}>{l}</option>)}</select></div>
+    <button class="btn btn--sm" type="submit">絞り込む</button>
+    {(q || status) && <a class="btn btn--sm" href="/admin/contacts">解除</a>}
+  </form>
+  <p class="muted" role="status" style="margin-bottom:.75rem"><strong>{rows.length}</strong> 件{rows.length === 200 ? '（直近200件まで表示）' : ''}</p>
+  {rows.length === 0 ? <div class="empty">{q || status ? '条件に一致する問い合わせはありません。' : 'まだ問い合わせはありません。'}</div> : (
+    <div class="tbl-wrap"><table class="tbl"><thead><tr><th>受信日時</th><th>名前</th><th>件名</th><th>状態</th></tr></thead>
+      <tbody>{rows.map((c) => (
+        <tr data-unread={c.status === 'new'}><td class="mono" style="white-space:nowrap">{fmt(c.created_at)}</td><td>{c.name}<br /><span class="muted" style="font-size:.72rem">{c.email}</span></td>
+          <td><a class="title" href={`/admin/contacts/view?id=${c.id}`}>{c.subject}</a></td><td><span class={`pill pill--${c.status}`}>{CONTACT_STATUS_LABEL[c.status]}</span></td></tr>
+      ))}</tbody></table></div>)}
+</AdminLayout>

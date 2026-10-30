@@ -1,0 +1,19 @@
+---
+export const prerender = false;
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import AField from '@/components/AField.astro';
+import SaveBar from '@/components/SaveBar.astro';
+const me = Astro.locals.admin!;
+---
+<AdminLayout title="アカウント" active="account">
+  <section class="panel"><h2>ログイン中のアカウント</h2><dl class="kv" style="margin-top:.75rem"><dt>メール</dt><dd>{me.email}</dd><dt>ロール</dt><dd>{me.role}</dd></dl></section>
+  <form class="panel" data-admin-form data-endpoint="/api/admin/password" style="margin-top:1.25rem" autocomplete="off">
+    <h2>パスワードの変更</h2><p class="hint">12文字以上。変更すると、他の端末のログインは無効になります。</p>
+    <div class="grid" style="max-width:26rem">
+      <AField name="current" label="現在のパスワード" type="password" required autocomplete="current-password" />
+      <AField name="next" label="新しいパスワード" type="password" required autocomplete="new-password" />
+    </div>
+    <SaveBar label="変更する" />
+  </form>
+  <section class="panel" style="margin-top:1.25rem"><h2>パスワードを忘れた場合</h2><p class="hint">ログインできない場合は、開発環境で <code>npm run admin:create -- --remote</code> を実行し、同じメールアドレスで新しいパスワードを設定してください（全セッションが失効します）。詳細は README を参照してください。</p></section>
+</AdminLayout>

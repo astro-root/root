@@ -1,95 +1,155 @@
 ---
 export const prerender = false;
-
 import Layout from '@/layouts/Layout.astro';
 import { getSettings } from '@/lib/content';
+import { LIMITS } from '@/lib/contact';
 
-const settings = await getSettings();
-
-const links = [
-  {
-    label: 'Email',
-    value: settings.contactEmail,
-    href: `mailto:${settings.contactEmail}`
-  },
-  { label: 'GitHub', value: settings.githubUrl.replace(/^https?:\/\//, ''), href: settings.githubUrl },
-  { label: 'X', value: settings.xUrl.replace(/^https?:\/\//, ''), href: settings.xUrl }
-];
+const settings = await getSettings(Astro.locals.db);
+const { contact, site } = settings;
+const sent = Astro.url.searchParams.get('sent') === '1';
+const err = Astro.url.searchParams.get('error');
+const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY;
+const renderedAt = Date.now();
 ---
 
-<Layout title="Contact" description="連絡先。">
-  <section class="wrap page-head">
-    <h1>Contact</h1>
-  </section>
+<Layout title="Contact" description="るーとへのお問い合わせフォーム。">
+  <div class="shell page">
+    <header class="page-head">
+      <p class="eyebrow">Contact</p>
+      <h1>お問い合わせ</h1>
+      <p class="lede">{contact.intro}</p>
+    </header>
 
-  <section class="links wrap">
-    <ul>
-      {
-        links.map((l) => (
-          <li>
-            <a
-              class="links__row"
-              href={l.href}
-              target={l.href.startsWith('http') ? '_blank' : undefined}
-              rel={l.href.startsWith('http') ? 'noreferrer' : undefined}
-            >
-              <span class="links__label eyebrow">{l.label}</span>
-              <span class="links__value">{l.value}</span>
-            </a>
-          </li>
-        ))
-      }
-    </ul>
-  </section>
+    <div class="contact-layout">
+      <div>
+        {sent && <div class="notice notice--ok" role="status">{contact.successMessage}</div>}
+        {err && <div class="notice notice--error" role="alert">{err === 'rate' ? '送信回数の上限に達しました。しばらくしてからお試しください。' : '入力内容を確認のうえ、もう一度お試しください。JavaScriptを有効にするとエラー箇所が表示されます。'}</div>}
+
+        <div id="form-success" class="notice notice--ok" role="status" tabindex="-1" hidden>{contact.successMessage}</div>
+
+        <form id="contact-form" class="form" method="post" action="/api/contact" novalidate style={sent ? 'display:none' : undefined}>
+          <div id="form-error" class="notice notice--error" role="alert" tabindex="-1" hidden></div>
+
+          <div class="field">
+            <label for="c-name">お名前<span class="req" aria-hidden="true">*</span><span class="sr-only">（必須）</span></label>
+            <input class="input" id="c-name" name="name" type="text" required maxlength={LIMITS.name} autocomplete="name" aria-describedby="e-name" />
+            <p class="field-error" id="e-name" aria-live="polite"></p>
+          </div>
+          <div class="field">
+            <label for="c-email">メールアドレス<span class="req" aria-hidden="true">*</span><span class="sr-only">（必須）</span></label>
+            <input class="input" id="c-email" name="email" type="email" required maxlength={LIMITS.email} autocomplete="email" inputmode="email" aria-describedby="h-email e-email" />
+            <p class="hint" id="h-email">返信にのみ使用します。公開されることはありません。</p>
+            <p class="field-error" id="e-email" aria-live="polite"></p>
+          </div>
+          <div class="field">
+            <label for="c-subject">件名<span class="req" aria-hidden="true">*</span><span class="sr-only">（必須）</span></label>
+            <input class="input" id="c-subject" name="subject" type="text" required maxlength={LIMITS.subject} aria-describedby="e-subject" />
+            <p class="field-error" id="e-subject" aria-live="polite"></p>
+          </div>
+          <div class="field">
+            <label for="c-message">お問い合わせ内容<span class="req" aria-hidden="true">*</span><span class="sr-only">（必須）</span></label>
+            <textarea class="textarea" id="c-message" name="message" required minlength={LIMITS.messageMin} maxlength={LIMITS.message} rows="8" aria-describedby="h-message e-message"></textarea>
+            <p class="hint" id="h-message"><span id="msg-count">0</span> / {LIMITS.message}文字（{LIMITS.messageMin}文字以上）</p>
+            <p class="field-error" id="e-message" aria-live="polite"></p>
+          </div>
+
+          <div class="field">
+            <label class="check"><input type="checkbox" name="consent" id="c-consent" required aria-describedby="e-consent" /><span><a href="/privacy" target="_blank" rel="noopener">プライバシーポリシー</a>に同意します<span class="req" aria-hidden="true">*</span><span class="sr-only">（必須）</span></span></label>
+            <p class="field-error" id="e-consent" aria-live="polite"></p>
+          </div>
+
+          <div class="hp" aria-hidden="true"><label>ウェブサイト（入力しないでください）<input type="text" name="website" tabindex="-1" autocomplete="off" /></label></div>
+          <input type="hidden" name="_t" value={renderedAt} />
+          {siteKey && <div class="cf-turnstile" data-sitekey={siteKey}></div>}
+          {siteKey && <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>}
+
+          <div><button class="btn btn--primary" type="submit" id="submit-btn"><span id="submit-label">送信する</span></button></div>
+        </form>
+      </div>
+
+      <aside class="muted" style="font-size:var(--fs-0);line-height:1.9;display:grid;gap:1rem;align-content:start">
+        <p class="eyebrow">ご案内</p>
+        <p>お送りいただいた内容は、問い合わせ対応のためにのみ利用します。詳しくは<a href="/privacy">プライバシーポリシー</a>をご覧ください。</p>
+        <p>返信をお約束するものではありません。あらかじめご了承ください。</p>
+      </aside>
+    </div>
+  </div>
 </Layout>
 
-<style>
-  .page-head {
-    padding-top: clamp(5rem, 10vw, 7rem);
-    padding-bottom: clamp(1.5rem, 4vw, 2.5rem);
-  }
+<script>
+  const form = document.getElementById('contact-form') as HTMLFormElement | null;
+  if (form) {
+    const $ = (id: string) => document.getElementById(id) as HTMLElement;
+    const errBox = $('form-error');
+    const okBox = $('form-success');
+    const btn = $('submit-btn') as HTMLButtonElement;
+    const label = $('submit-label');
+    const msg = $('c-message') as HTMLTextAreaElement;
+    let sending = false;
 
-  .page-head h1 {
-    font-size: clamp(2rem, 5vw, 2.75rem);
-    font-weight: 600;
-  }
+    msg.addEventListener('input', () => { $('msg-count').textContent = String(msg.value.length); });
+    $('msg-count').textContent = String(msg.value.length);
 
-  .links {
-    padding-bottom: var(--section-space);
-  }
+    const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    function validate(): Record<string, string> {
+      const d = new FormData(form!);
+      const e: Record<string, string> = {};
+      const g = (k: string) => String(d.get(k) ?? '').trim();
+      if (!g('name')) e.name = 'お名前を入力してください。';
+      if (!g('email')) e.email = 'メールアドレスを入力してください。';
+      else if (!EMAIL.test(g('email'))) e.email = 'メールアドレスの形式が正しくありません。';
+      if (!g('subject')) e.subject = '件名を入力してください。';
+      if (!g('message')) e.message = 'お問い合わせ内容を入力してください。';
+      else if (g('message').length < 10) e.message = 'お問い合わせ内容は10文字以上で入力してください。';
+      if (!d.get('consent')) e.consent = 'プライバシーポリシーへの同意が必要です。';
+      return e;
+    }
+    const fields = ['name', 'email', 'subject', 'message', 'consent'];
+    function show(errors: Record<string, string>) {
+      let first: HTMLElement | null = null;
+      for (const f of fields) {
+        const input = $(`c-${f}`);
+        const p = $(`e-${f}`);
+        p.textContent = errors[f] ?? '';
+        if (errors[f]) { input.setAttribute('aria-invalid', 'true'); first ??= input; } else input.removeAttribute('aria-invalid');
+      }
+      first?.focus();
+    }
+    function busy(on: boolean) {
+      sending = on; btn.disabled = on; btn.setAttribute('aria-busy', String(on));
+      label.textContent = on ? '送信中…' : '送信する';
+    }
 
-  .links ul {
-    display: flex;
-    flex-direction: column;
-    gap: 0.6rem;
-  }
+    form.addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      if (sending) return; // 二重送信防止
+      errBox.hidden = true;
+      const errors = validate();
+      show(errors);
+      if (Object.keys(errors).length) return;
 
-  .links__row {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.5rem 1.5rem;
-    padding: clamp(1.1rem, 3vw, 1.5rem);
-    text-decoration: none;
-    background: var(--color-bg-panel);
-    border: 1px solid var(--color-line);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow-card);
-    transition: border-color var(--dur-fast) var(--ease-lab), transform var(--dur-fast) var(--ease-lab);
+      busy(true);
+      try {
+        const d = new FormData(form);
+        const res = await fetch('/api/contact', { method: 'POST', headers: { Accept: 'application/json' }, body: d });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.ok) {
+          form.hidden = true; form.style.display = 'none';
+          okBox.hidden = false; okBox.focus();
+          form.reset();
+          return;
+        }
+        if (data.errors) show(data.errors);
+        errBox.textContent = data.message || (data.errors ? '入力内容を確認してください。' : '送信に失敗しました。時間をおいてもう一度お試しください。');
+        errBox.hidden = false;
+        if (!data.errors) errBox.focus();
+        (window as any).turnstile?.reset?.();
+      } catch {
+        errBox.textContent = 'ネットワークエラーが発生しました。入力内容は保持されています。接続を確認してもう一度お試しください。';
+        errBox.hidden = false; errBox.focus();
+      } finally {
+        busy(false);
+      }
+    });
   }
-
-  .links__row:hover,
-  .links__row:focus-visible {
-    border-color: var(--color-line-strong);
-    transform: translateY(-2px);
-  }
-
-  .links__value {
-    font-size: clamp(1.1rem, 3vw, 1.5rem);
-    letter-spacing: -0.01em;
-  }
-
-  .links__row:hover .links__value {
-    color: var(--color-accent);
-  }
-</style>
+</script>

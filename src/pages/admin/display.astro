@@ -1,0 +1,24 @@
+---
+export const prerender = false;
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import AField from '@/components/AField.astro';
+import SaveBar from '@/components/SaveBar.astro';
+import { getSettings } from '@/lib/content';
+const { display: d } = await getSettings(Astro.locals.db);
+---
+<AdminLayout title="表示・アニメーション" active="display" subtitle="サイト全体の演出。保存すると公開サイトにすぐ反映されます。">
+  <form class="panel" data-admin-form data-endpoint="/api/admin/settings" data-wrap-key="display">
+    <h2>流れ星アニメーション</h2>
+    <p class="hint">背景に流れ星を表示します。閲覧者のOSで「視差効果を減らす」が有効な場合は、設定に関係なく表示されません。スマートフォンでは自動的に頻度と同時表示数を抑えます。</p>
+    <div class="grid" style="max-width:32rem">
+      <AField name="meteors.enabled" type="checkbox" label="流れ星を表示する" value={d.meteors.enabled} />
+      <AField name="meteors.frequency" label="表示頻度" as="select" value={d.meteors.frequency} options={[{ value: 'low', label: '控えめ（約7秒に1本）' }, { value: 'normal', label: '標準（約3.6秒に1本）' }, { value: 'high', label: '多め（約1.8秒に1本）' }]} />
+    </div>
+    <h2 style="margin-top:2rem">その他の演出</h2>
+    <div class="grid" style="margin-top:.75rem">
+      <AField name="opening" type="checkbox" label="トップページのオープニング演出（セッション中1回）" value={d.opening} />
+      <AField name="reveal" type="checkbox" label="スクロールに応じた表示アニメーション" value={d.reveal} />
+    </div>
+    <SaveBar />
+  </form>
+</AdminLayout>

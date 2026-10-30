@@ -1,0 +1,33 @@
+---
+export const prerender = false;
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import AField from '@/components/AField.astro';
+import Repeater from '@/components/Repeater.astro';
+import SaveBar from '@/components/SaveBar.astro';
+import { getSettings } from '@/lib/content';
+const { home } = await getSettings(Astro.locals.db);
+const names: Record<string, string> = { hero: 'ヒーロー', interests: '関心領域', projects: 'プロジェクト（注目）', notes: '最近のブログ', news: 'お知らせ', links: 'ほかのページ' };
+const sections = home.sections.map((s) => ({ ...s, name: names[s.id] ?? s.id }));
+---
+<AdminLayout title="トップページ" active="home" subtitle="ヒーロー、セクションの表示順・表示/非表示、お知らせ">
+  <form data-admin-form data-endpoint="/api/admin/settings" data-wrap-key="home">
+    <section class="panel"><h2>ヒーロー</h2>
+      <div class="grid">
+        <AField name="heroTitle" label="タイトル" value={home.heroTitle} required maxlength={80} />
+        <AField name="heroLede" label="リード文（自己紹介）" as="textarea" rows={3} value={home.heroLede} maxlength={400} />
+      </div>
+      <p class="label" style="margin:1.25rem 0 .5rem;font-weight:600;font-size:var(--fs-0)">ボタン（最大4件）</p>
+      <Repeater path="buttons" rows={home.buttons} max={4} sortable addLabel="ボタンを追加" fields={[{ k: 'label', label: 'ラベル', maxlength: 40 }, { k: 'href', label: 'リンク先', maxlength: 500 }, { k: 'primary', label: '強調表示', type: 'checkbox' }]} />
+    </section>
+    <section class="panel"><h2>セクションの順序と表示</h2><p class="hint">↑↓で並べ替え、チェックで表示/非表示を切り替えます。見出しと補足文も編集できます。</p>
+      <Repeater path="sections" rows={sections} removable={false} sortable fields={[{ k: 'id', label: 'セクション', fixed: true }, { k: 'enabled', label: '表示', type: 'checkbox' }, { k: 'title', label: '見出し', maxlength: 60 }, { k: 'body', label: '補足文（任意）', maxlength: 400 }]} />
+    </section>
+    <section class="panel"><h2>関心領域</h2><p class="hint">トップとAboutページに表示されます（最大12件）。</p>
+      <Repeater path="interests" rows={home.interests} max={12} sortable addLabel="項目を追加" fields={[{ k: 'label', label: '項目名', maxlength: 40 }, { k: 'note', label: '説明', maxlength: 200 }]} />
+    </section>
+    <section class="panel"><h2>お知らせ</h2><p class="hint">「お知らせ」セクションを表示にすると公開されます（最大10件）。</p>
+      <Repeater path="news" rows={home.news} max={10} sortable addLabel="お知らせを追加" fields={[{ k: 'date', label: '日付', placeholder: '2026-10-28', maxlength: 20 }, { k: 'text', label: '内容', maxlength: 200 }, { k: 'href', label: 'リンク（任意）', maxlength: 500 }]} />
+    </section>
+    <SaveBar />
+  </form>
+</AdminLayout>

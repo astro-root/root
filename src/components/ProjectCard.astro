@@ -1,0 +1,15 @@
+---
+import type { Project } from '@/lib/content';
+interface Props { project: Project; delay?: number }
+const { project: p, delay = 0 } = Astro.props;
+---
+<article class="project reveal" style={`--d:${delay}ms`}>
+  {p.thumbnail && <div class="project__thumb"><img src={p.thumbnail} alt={p.thumbnail_alt} loading="lazy" decoding="async" width="640" height="360" /></div>}
+  <div class="project__meta">
+    <span>{p.category}</span>
+    <span class="status" data-s={p.status}>{p.status}</span>
+  </div>
+  <h3><a href={`/projects/${p.id}`}>{p.title}</a></h3>
+  <p>{p.summary}</p>
+  {p.technology.length > 0 && <ul class="taglist">{p.technology.map((t) => <li class="tag">{t}</li>)}</ul>}
+</article>

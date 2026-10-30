@@ -1,0 +1,131 @@
+---
+export const prerender = false;
+import Layout from '@/layouts/Layout.astro';
+import ProjectCard from '@/components/ProjectCard.astro';
+import { listProjects, type Project } from '@/lib/content';
+
+const all = await listProjects(Astro.locals.db);
+const sp = Astro.url.searchParams;
+const norm = (s: string) => s.normalize('NFKC').toLowerCase();
+
+const q = (sp.get('q') ?? '').trim().slice(0, 100);
+const cats = sp.getAll('category').filter(Boolean);
+const techs = sp.getAll('tech').filter(Boolean);
+const statuses = sp.getAll('status').filter(Boolean);
+
+const count = (get: (p: Project) => string[]) => {
+  const m = new Map<string, number>();
+  for (const p of all) for (const v of get(p)) m.set(v, (m.get(v) ?? 0) + 1);
+  return [...m.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'ja'));
+};
+const catFacet = count((p) => (p.category ? [p.category] : []));
+const techFacet = count((p) => p.technology);
+const statusFacet = count((p) => (p.status ? [p.status] : []));
+
+const terms = norm(q).split(/\s+/).filter(Boolean);
+const filtered = all.filter((p) => {
+  const hay = norm([p.title, p.summary, p.body_md, p.category, p.technology.join(' ')].join(' '));
+  if (!terms.every((t) => hay.includes(t))) return false;
+  if (cats.length && !cats.includes(p.category)) return false;
+  if (statuses.length && !statuses.includes(p.status)) return false;
+  if (techs.length && !techs.some((t) => p.technology.includes(t))) return false;
+  return true;
+});
+
+const active = !!(q || cats.length || techs.length || statuses.length);
+// 条件の1つを外したURL
+const without = (key: string, value?: string) => {
+  const u = new URLSearchParams();
+  for (const [k, v] of sp.entries()) if (!(k === key && (value === undefined || v === value))) u.append(k, v);
+  const s = u.toString();
+  return s ? `/projects?${s}` : '/projects';
+};
+const chips = [
+  ...(q ? [{ label: `検索: ${q}`, href: without('q') }] : []),
+  ...cats.map((v) => ({ label: `カテゴリ: ${v}`, href: without('category', v) })),
+  ...statuses.map((v) => ({ label: `状況: ${v}`, href: without('status', v) })),
+  ...techs.map((v) => ({ label: `技術: ${v}`, href: without('tech', v) }))
+];
+---
+
+<Layout title="Projects" description="るーとが取り組んでいるプロジェクト・制作物の一覧。">
+  <div class="shell page">
+    <header class="page-head">
+      <p class="eyebrow">Projects</p>
+      <h1>作っているもの</h1>
+      <p class="lede">クイズ・Webサービス・ツール・研究。名前や説明、使っている技術で絞り込めます。</p>
+    </header>
+
+    <div class="with-sidebar">
+      <form class="filter" id="filter" method="get" action="/projects" data-collapsed="true" aria-label="プロジェクトの絞り込み">
+        <button type="button" class="btn btn--sm filter__toggle" id="filter-toggle" aria-expanded="false" aria-controls="filter-body">絞り込み{active ? '（適用中）' : ''}</button>
+        <div class="filter__body" id="filter-body">
+          <div class="field">
+            <label for="f-q">キーワード</label>
+            <input class="input" id="f-q" type="search" name="q" value={q} placeholder="名前・説明・技術" maxlength="100" />
+          </div>
+          {catFacet.length > 0 && (
+            <fieldset><legend>カテゴリ</legend>
+              {catFacet.map(([v, n]) => <label class="check"><input type="checkbox" name="category" value={v} checked={cats.includes(v)} /><span>{v}</span><small>{n}</small></label>)}
+            </fieldset>
+          )}
+          {statusFacet.length > 0 && (
+            <fieldset><legend>開発状況</legend>
+              {statusFacet.map(([v, n]) => <label class="check"><input type="checkbox" name="status" value={v} checked={statuses.includes(v)} /><span>{v}</span><small>{n}</small></label>)}
+            </fieldset>
+          )}
+          {techFacet.length > 0 && (
+            <fieldset><legend>技術スタック</legend>
+              {techFacet.map(([v, n]) => <label class="check"><input type="checkbox" name="tech" value={v} checked={techs.includes(v)} /><span>{v}</span><small>{n}</small></label>)}
+            </fieldset>
+          )}
+          <p class="hint">同じ項目の中は「いずれか」、項目どうしは「すべて満たす」で絞り込みます。</p>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+            <button class="btn btn--primary btn--sm" type="submit">絞り込む</button>
+            {active && <a class="btn btn--sm" href="/projects">条件をすべて解除</a>}
+          </div>
+        </div>
+      </form>
+
+      <section aria-label="プロジェクト一覧">
+        <div class="result-bar">
+          <p id="result-count" role="status" aria-live="polite"><strong>{filtered.length}</strong> 件{active ? `（全 ${all.length} 件中）` : ''}</p>
+          {chips.map((c) => <a class="chip" href={c.href} aria-label={`${c.label} を解除`}>{c.label}</a>)}
+        </div>
+        {filtered.length > 0 ? (
+          <div class="project-grid">{filtered.map((p, i) => <ProjectCard project={p} delay={Math.min(i, 8) * 40} />)}</div>
+        ) : (
+          <div class="empty">
+            <p><strong>条件に一致するプロジェクトがありません。</strong></p>
+            <p style="margin-top:0.5rem">条件を減らすか、キーワードを変えてお試しください。</p>
+            <p style="margin-top:1.25rem"><a class="btn" href="/projects">条件をすべて解除</a></p>
+          </div>
+        )}
+      </section>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  const form = document.getElementById('filter') as HTMLFormElement | null;
+  const toggle = document.getElementById('filter-toggle');
+  if (form) {
+    const wide = matchMedia('(min-width: 961px)');
+    const sync = () => { if (wide.matches) form.dataset.collapsed = 'false'; };
+    sync(); wide.addEventListener('change', sync);
+    toggle?.addEventListener('click', () => {
+      const open = form.dataset.collapsed === 'true';
+      form.dataset.collapsed = open ? 'false' : 'true';
+      toggle.setAttribute('aria-expanded', String(open));
+    });
+    // JSが有効なら変更ごとに即反映（無効でも「絞り込む」ボタンで動作する）
+    let t: number | undefined;
+    form.addEventListener('change', (e) => { if ((e.target as HTMLInputElement).type === 'checkbox') form.requestSubmit(); });
+    form.querySelector('input[type=search]')?.addEventListener('input', () => { clearTimeout(t); t = window.setTimeout(() => form.requestSubmit(), 500); });
+    // 検索後もフォーカスを維持
+    if (new URLSearchParams(location.search).has('q')) {
+      const i = form.querySelector('input[type=search]') as HTMLInputElement;
+      if (document.activeElement === document.body && i.value) { /* 自動フォーカスはしない（モバイルのキーボード誤起動を避ける） */ }
+    }
+  }
+</script>

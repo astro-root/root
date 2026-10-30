@@ -1,64 +1,13 @@
 ---
+export const prerender = false;
 import Layout from '@/layouts/Layout.astro';
+Astro.response.status = 404;
 ---
-
-<Layout
-  title="404"
-  description="お探しのページが見つかりませんでした。"
-  noIndex
->
-  <section class="not-found">
-    <div class="wrap not-found__inner">
-      <p class="eyebrow">Error</p>
-      <h1>404</h1>
-      <p class="not-found__text">
-        このページは存在しないか、移動しました。観測範囲の外だったようです。
-      </p>
-      <a class="not-found__link" href="/">← ホームへ戻る</a>
-    </div>
-  </section>
+<Layout title="ページが見つかりません" description="お探しのページは見つかりませんでした。" noindex>
+  <div class="shell page" style="min-height:55vh;display:grid;align-content:center;gap:1.25rem">
+    <p class="eyebrow">404</p>
+    <h1 style="font-size:var(--fs-4)">ページが見つかりません</h1>
+    <p class="lede">URLが変更されたか、非公開・削除された可能性があります。</p>
+    <p style="display:flex;gap:.6rem;flex-wrap:wrap"><a class="btn btn--primary" href="/">ホームへ戻る</a><a class="btn" href="/projects">Projects</a><a class="btn" href="/blog">Blog</a></p>
+  </div>
 </Layout>
-
-<style>
-  .not-found {
-    position: relative;
-    overflow: hidden;
-    min-height: 70svh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding-block: clamp(4rem, 12vw, 8rem);
-  }
-
-  .not-found__inner {
-    position: relative;
-    z-index: 1;
-    width: 100%;
-  }
-
-  .not-found h1 {
-    font-size: clamp(3rem, 10vw, 5rem);
-    margin-top: 0.75rem;
-  }
-
-  .not-found__text {
-    margin-top: 1.25rem;
-    max-width: 42ch;
-    color: var(--color-ink-soft);
-    font-size: var(--fs-1);
-  }
-
-  .not-found__link {
-    display: inline-block;
-    margin-top: 2rem;
-    font-family: var(--font-mono);
-    font-size: var(--fs-00);
-    text-decoration: underline;
-    text-decoration-color: var(--color-line-strong);
-  }
-
-  .not-found__link:hover {
-    color: var(--color-accent);
-    text-decoration-color: var(--color-accent);
-  }
-</style>

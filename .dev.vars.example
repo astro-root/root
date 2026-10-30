@@ -1,0 +1,5 @@
+# ローカル開発用のシークレット。`cp .dev.vars.example .dev.vars` して値を埋める。
+# 本番では Cloudflare Pages の「環境変数（シークレット）」に同名で設定する。
+IP_HASH_SALT=change-me-to-a-long-random-string
+# 任意: Cloudflare Turnstile（設定した場合のみスパム検証に使われる）
+TURNSTILE_SECRET=

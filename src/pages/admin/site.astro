@@ -1,0 +1,77 @@
+---
+export const prerender = false;
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import AField from '@/components/AField.astro';
+import Repeater from '@/components/Repeater.astro';
+import SaveBar from '@/components/SaveBar.astro';
+import { getSettings } from '@/lib/content';
+const s = await getSettings(Astro.locals.db);
+const nav = [{ k: 'label', label: '表示名', maxlength: 40 }, { k: 'href', label: 'リンク先', placeholder: '/projects または https://…', maxlength: 500 }, { k: 'external', label: '別タブで開く', type: 'checkbox' as const }];
+const soc = [{ k: 'label', label: '名称', placeholder: 'GitHub', maxlength: 40 }, { k: 'href', label: 'URL（https://…）', maxlength: 500 }];
+---
+<AdminLayout title="基本・ナビ・SEO" active="site" subtitle="サイト名、ヘッダー/フッター、リンク、SEO・OGP。各ブロックを個別に保存します。">
+  <form class="panel" data-admin-form data-endpoint="/api/admin/settings" data-wrap-key="site" aria-labelledby="h-site">
+    <h2 id="h-site">サイト基本情報</h2><p class="hint">ヘッダー、フッター、タイトル、OGPなどに反映されます。</p>
+    <div class="grid grid--2">
+      <AField name="name" label="サイト名（正式名称）" value={s.site.name} required maxlength={60} />
+      <AField name="nameEn" label="英語表記（補助）" value={s.site.nameEn} maxlength={60} />
+    </div>
+    <div class="grid" style="margin-top:1rem">
+      <AField name="tagline" label="キャッチコピー（フッター等）" value={s.site.tagline} maxlength={100} />
+      <AField name="description" label="サイトの説明（meta description / OGP）" as="textarea" rows={3} value={s.site.description} maxlength={300} />
+      <div class="grid grid--2">
+        <AField name="contactEmail" label="公開する連絡先メール" type="email" value={s.site.contactEmail} hint="Aboutページの「Email」リンクに使われます。空にすると表示されません。" />
+        <AField name="copyright" label="コピーライト表記" value={s.site.copyright} maxlength={80} hint="年は自動で付きます。" />
+      </div>
+      <div class="grid grid--2">
+        <AField name="logo" label="ロゴ・アイコン画像" value={s.site.logo} upload required hint="/apple-touch-icon.png など。アップロードすると /media/… のURLが入ります。" />
+        <AField name="logoAlt" label="ロゴの代替テキスト" value={s.site.logoAlt} maxlength={100} />
+      </div>
+    </div>
+    <SaveBar />
+  </form>
+
+  <form class="panel" data-admin-form data-endpoint="/api/admin/settings" data-wrap-key="nav" data-array-value="items" aria-labelledby="h-nav">
+    <h2 id="h-nav">ヘッダーナビゲーション</h2><p class="hint">上から順に表示されます（最大12件）。ブログのURLは /blog です。</p>
+    <Repeater path="items" rows={s.nav} fields={nav} max={12} sortable addLabel="ナビ項目を追加" />
+    <SaveBar />
+  </form>
+
+  <form class="panel" data-admin-form data-endpoint="/api/admin/settings" data-wrap-key="footer" aria-labelledby="h-foot">
+    <h2 id="h-foot">フッター</h2><p class="hint">利用規約・プライバシーポリシーへのリンクを必ず残してください。</p>
+    <div class="grid">
+      <Repeater path="links" rows={s.footer.links} fields={nav} max={12} sortable addLabel="リンクを追加" />
+      <AField name="note" label="補足テキスト（コピーライトの後ろに表示）" value={s.footer.note} maxlength={100} />
+      <AField name="showSocial" type="checkbox" label="フッターにSNS・外部リンクを表示する" value={s.footer.showSocial} />
+    </div>
+    <SaveBar />
+  </form>
+
+  <form class="panel" data-admin-form data-endpoint="/api/admin/settings" data-wrap-key="social" data-array-value="items" aria-labelledby="h-soc">
+    <h2 id="h-soc">SNS・外部リンク</h2><p class="hint">フッターとAboutページに表示されます。</p>
+    <Repeater path="items" rows={s.social} fields={soc} max={10} sortable addLabel="リンクを追加" />
+    <SaveBar />
+  </form>
+
+  <form class="panel" data-admin-form data-endpoint="/api/admin/settings" data-wrap-key="seo" aria-labelledby="h-seo">
+    <h2 id="h-seo">SEO・OGP</h2>
+    <div class="grid">
+      <AField name="titleTemplate" label="ページタイトルのテンプレート" value={s.seo.titleTemplate} required hint="%s がページ名に置き換わります。例: %s — るーとの研究室" />
+      <AField name="ogImage" label="既定のOGP画像" value={s.seo.ogImage} upload required hint="推奨 1200×630px。記事・プロジェクトにサムネイルがあればそちらが優先されます。" />
+      <AField name="twitterCard" label="X(Twitter)カード" as="select" value={s.seo.twitterCard} options={[{ value: 'summary_large_image', label: '大きな画像（summary_large_image）' }, { value: 'summary', label: '小さな画像（summary）' }]} />
+      <AField name="structuredData" type="checkbox" label="構造化データ（JSON-LD）を出力する" value={s.seo.structuredData} />
+      <AField name="noindex" type="checkbox" label="サイト全体を検索エンジンにインデックスさせない（noindex）" value={s.seo.noindex} hint="公開前の確認時のみ有効にしてください。" />
+    </div>
+    <SaveBar />
+  </form>
+
+  <form class="panel" data-admin-form data-endpoint="/api/admin/settings" data-wrap-key="contact" aria-labelledby="h-con">
+    <h2 id="h-con">お問い合わせフォーム</h2>
+    <div class="grid">
+      <AField name="intro" label="フォーム上部の案内文" as="textarea" rows={2} value={s.contact.intro} maxlength={400} />
+      <AField name="successMessage" label="送信完了メッセージ" as="textarea" rows={2} value={s.contact.successMessage} maxlength={400} />
+      <AField name="retentionDays" label="保存期間の目安（日）" type="number" min={30} max={3650} value={s.contact.retentionDays} hint="問い合わせ管理画面の「期限切れを削除」で使われます。自動削除ではありません。" />
+    </div>
+    <SaveBar />
+  </form>
+</AdminLayout>

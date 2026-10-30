@@ -1,194 +1,52 @@
 ---
 export const prerender = false;
 import AdminLayout from '@/layouts/AdminLayout.astro';
-
-const CATEGORIES = ['Astronomy', 'Physics', 'Software', 'Web Development', 'Science', 'Notes'];
+import AField from '@/components/AField.astro';
+import SaveBar from '@/components/SaveBar.astro';
+import { getPost, listPosts } from '@/lib/content';
+import { STATE_LABEL } from '@/lib/defaults';
+const db = Astro.locals.db;
+const slug = Astro.url.searchParams.get('slug');
+const p = slug ? await getPost(db, slug, { all: true }) : null;
+if (slug && !p) return Astro.redirect('/admin/blog');
+const cats = [...new Set((await listPosts(db, { all: true })).map((x) => x.category).filter(Boolean))];
+const isNew = !p;
+const v = p ?? { slug: '', title: '', excerpt: '', body_md: '', category: '', tags: [] as string[], thumbnail: '', thumbnail_alt: '', featured: false, state: 'draft', published_at: null as string | null, seo_title: '', seo_description: '' };
 ---
-
-<AdminLayout title="Note editor" active="blog">
-  <div class="admin-heading">
-    <h1 id="form-title">Note</h1>
-    <a class="btn" href="/admin/blog">← 一覧へ</a>
-  </div>
-
-  <p id="loading" class="loading-note">読み込み中…</p>
-  <div id="status-msg-holder"></div>
-
-  <form id="post-form" class="panel" hidden novalidate>
-    <div class="field">
-      <label for="title">Title *</label>
-      <input id="title" required type="text" />
+<AdminLayout title={isNew ? '記事の新規作成' : `編集: ${v.title}`} active="blog">
+  <Fragment slot="actions">
+    <a class="btn btn--sm" href="/admin/blog">一覧へ</a>
+    {!isNew && v.state === 'published' && <a class="btn btn--sm" href={`/blog/${v.slug}`} target="_blank" rel="noopener">公開ページ ↗</a>}
+    {!isNew && <button type="button" class="btn btn--sm btn--danger" data-delete={`/api/admin/posts?slug=${v.slug}`} data-confirm={`「${v.title}」を削除します。元に戻せません。よろしいですか？`} data-after="/admin/blog">削除</button>}
+  </Fragment>
+  <form data-admin-form data-endpoint="/api/admin/posts" data-after="/admin/blog/edit?slug=" data-after-field="slug">
+    <input type="hidden" name="original" value={p?.slug ?? ''} />
+    <div class="edit-layout">
+      <div class="panel"><div class="grid">
+        <AField name="title" label="タイトル" value={v.title} required maxlength={150} />
+        <AField name="excerpt" label="要約（一覧・meta description の既定値）" as="textarea" rows={3} value={v.excerpt} maxlength={300} />
+        <AField name="body_md" label="本文（Markdown）" as="textarea" md rows={22} value={v.body_md} />
+      </div></div>
+      <aside>
+        <div class="panel"><h2>公開設定</h2><div class="grid" style="margin-top:.75rem">
+          <AField name="state" label="公開状態" as="select" value={v.state} options={['draft', 'published', 'private'].map((s) => ({ value: s, label: STATE_LABEL[s] }))} hint="公開以外は公開サイト・検索・サイトマップに出ません。" />
+          <AField name="published_at" label="公開日" type="date" value={v.published_at ? v.published_at.slice(0, 10) : ''} hint="未来の日付にすると予約公開になります。空欄なら保存時刻。" />
+        </div></div>
+        <div class="panel"><h2>分類</h2><div class="grid" style="margin-top:.75rem">
+          <AField name="slug" label="スラッグ（URL）" value={v.slug} required maxlength={80} hint="英小文字・数字・ハイフン。/blog/○○ になります。" />
+          <div class="field"><label for="f-category">カテゴリ</label><input class="input" id="f-category" name="category" value={v.category} maxlength={40} list="cats" /><datalist id="cats">{cats.map((c) => <option value={c} />)}</datalist><p class="field-error"></p></div>
+          <AField name="tags" label="タグ（カンマ区切り）" value={v.tags.join(', ')} hint="例: 物理, 光, 覚え書き" />
+        </div></div>
+        <div class="panel"><h2>アイキャッチ</h2><div class="grid" style="margin-top:.75rem">
+          <AField name="thumbnail" label="画像" value={v.thumbnail ?? ''} upload hint="OGP画像にも使われます（推奨 1200×630）。" />
+          <AField name="thumbnail_alt" label="代替テキスト" value={v.thumbnail_alt} maxlength={200} />
+        </div></div>
+        <div class="panel"><h2>SEO</h2><div class="grid" style="margin-top:.75rem">
+          <AField name="seo_title" label="タイトル（空欄で記事タイトル）" value={v.seo_title} maxlength={120} />
+          <AField name="seo_description" label="meta description（空欄で要約）" as="textarea" rows={3} value={v.seo_description} maxlength={200} />
+        </div></div>
+      </aside>
     </div>
-
-    <div class="field-row">
-      <div class="field">
-        <label for="slug">Slug（URL、空欄で自動生成）</label>
-        <input id="slug" type="text" placeholder="my-post-title" />
-      </div>
-      <div class="field">
-        <label for="date">Date *</label>
-        <input id="date" required type="date" />
-      </div>
-    </div>
-
-    <div class="field">
-      <label for="category">Category *</label>
-      <select id="category" required>
-        {CATEGORIES.map((c) => <option value={c}>{c}</option>)}
-      </select>
-    </div>
-
-    <div class="field">
-      <label for="tags">Tags（カンマ区切り）</label>
-      <input id="tags" type="text" placeholder="物理, 覚え書き" />
-    </div>
-
-    <div class="field">
-      <label for="excerpt">Excerpt（一覧に表示する短い要約） *</label>
-      <textarea id="excerpt" required rows="2"></textarea>
-    </div>
-
-    <div class="field">
-      <label for="content">Content（Markdown） *</label>
-      <textarea id="content" required rows="16"></textarea>
-    </div>
-
-    <div class="field-row">
-      <div class="field checkbox-field">
-        <input id="published" type="checkbox" checked />
-        <label for="published">公開する（Published）</label>
-      </div>
-      <div class="field checkbox-field">
-        <input id="featured" type="checkbox" />
-        <label for="featured">Featured</label>
-      </div>
-    </div>
-
-    <div class="form-actions">
-      <button type="submit" class="btn btn-primary" id="submit-btn">保存する</button>
-      <button type="button" class="btn btn-danger" id="delete-btn" hidden>この記事を削除</button>
-    </div>
+    <SaveBar />
   </form>
 </AdminLayout>
-
-<script>
-  import {
-    requireAdmin,
-    getDb,
-    doc,
-    getDoc,
-    collection,
-    addDoc,
-    updateDoc,
-    deleteDoc
-  } from '@/lib/firebase-client';
-
-  await requireAdmin();
-  const db = getDb();
-
-  const params = new URLSearchParams(window.location.search);
-  const id = params.get('id');
-
-  const form = document.getElementById('post-form') as HTMLFormElement;
-  const deleteBtn = document.getElementById('delete-btn') as HTMLButtonElement;
-
-  function field(fid: string) {
-    return document.getElementById(fid) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
-  }
-
-  function showMsg(msg: string, ok = true) {
-    document.getElementById('status-msg-holder')!.innerHTML =
-      `<p class="status-msg ${ok ? 'ok' : 'err'}">${msg}</p>`;
-  }
-
-  function slugify(text: string) {
-    return text
-      .toLowerCase()
-      .trim()
-      .replace(/[^\w\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-');
-  }
-
-  if (id) {
-    document.getElementById('form-title')!.textContent = 'Edit Note';
-    const snap = await getDoc(doc(db, 'blog', id));
-    if (snap.exists()) {
-      const d = snap.data() as any;
-      (field('title') as HTMLInputElement).value = d.title ?? '';
-      (field('slug') as HTMLInputElement).value = d.slug ?? '';
-      (field('date') as HTMLInputElement).value = (d.date ?? '').slice(0, 10);
-      (field('category') as HTMLSelectElement).value = d.category ?? 'Notes';
-      (field('tags') as HTMLInputElement).value = (d.tags ?? []).join(', ');
-      (field('excerpt') as HTMLTextAreaElement).value = d.excerpt ?? '';
-      (field('content') as HTMLTextAreaElement).value = d.content ?? '';
-      (field('published') as HTMLInputElement).checked = Boolean(d.published);
-      (field('featured') as HTMLInputElement).checked = Boolean(d.featured);
-      deleteBtn.hidden = false;
-    } else {
-      showMsg('指定されたNoteが見つかりませんでした。', false);
-    }
-  } else {
-    document.getElementById('form-title')!.textContent = 'New Note';
-    (field('date') as HTMLInputElement).value = new Date().toISOString().slice(0, 10);
-  }
-
-  document.getElementById('loading')!.setAttribute('hidden', '');
-  form.hidden = false;
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement;
-    submitBtn.disabled = true;
-    submitBtn.textContent = '保存中…';
-
-    const title = (field('title') as HTMLInputElement).value.trim();
-    const slugInput = (field('slug') as HTMLInputElement).value.trim();
-
-    const payload = {
-      title,
-      slug: slugInput ? slugify(slugInput) : slugify(title),
-      date: (field('date') as HTMLInputElement).value,
-      category: (field('category') as HTMLSelectElement).value,
-      tags: (field('tags') as HTMLInputElement).value
-        .split(',')
-        .map((t) => t.trim())
-        .filter(Boolean),
-      excerpt: (field('excerpt') as HTMLTextAreaElement).value.trim(),
-      content: (field('content') as HTMLTextAreaElement).value,
-      published: (field('published') as HTMLInputElement).checked,
-      featured: (field('featured') as HTMLInputElement).checked
-    };
-
-    try {
-      if (id) {
-        await updateDoc(doc(db, 'blog', id), payload);
-      } else {
-        await addDoc(collection(db, 'blog'), payload);
-      }
-      window.location.href = '/admin/blog';
-    } catch (err: any) {
-      showMsg(`保存に失敗しました: ${err.message ?? err}`, false);
-      submitBtn.disabled = false;
-      submitBtn.textContent = '保存する';
-    }
-  });
-
-  deleteBtn.addEventListener('click', async () => {
-    if (!id) return;
-    if (!confirm('この記事を削除しますか？この操作は取り消せません。')) return;
-    await deleteDoc(doc(db, 'blog', id));
-    window.location.href = '/admin/blog';
-  });
-</script>
-
-<style>
-  .form-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 1.5rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid var(--color-line);
-  }
-</style>
