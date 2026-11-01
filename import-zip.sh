@@ -126,11 +126,15 @@ fi
 
 # ---------------------------------------------------------------- 3. 反映（ファイルの置き換え）
 echo
-echo "リポジトリ内の既存ファイル（.git と node_modules 以外）を、zip の内容で置き換えます。"
-echo "置き換え前の状態はコミット済みなので、Git で元に戻せます。"
+echo "Git が管理している既存ファイルを、zip の内容で置き換えます。"
+echo "・置き換え前の状態はコミット済みなので、Git で元に戻せます。"
+echo "・Git 管理外のファイル（.dev.vars / .env / ローカルDB(.wrangler) / node_modules / backups）は消さずに残します。"
 confirm "続行しますか？" || { echo "中止しました（ブランチ $BRANCH は作成済みですが、ファイルは変更していません）。"; exit 0; }
 
-find "$REPO_DIR" -mindepth 1 -maxdepth 1 ! -name .git ! -name node_modules -exec rm -rf {} +
+# 追跡中のファイルだけを削除する（untracked / ignored は触らない）。zip に無い旧ファイルはここで消える。
+git ls-files -z | xargs -0 -r rm -f --
+# 空になったディレクトリを掃除（.git と、無視ファイルを含むディレクトリは対象外）
+find "$REPO_DIR" -mindepth 1 -type d -empty -not -path "$REPO_DIR/.git" -not -path "$REPO_DIR/.git/*" -delete 2>/dev/null || true
 cp -a "$SRC"/. "$REPO_DIR"/
 ok "ファイルを反映しました"
 
